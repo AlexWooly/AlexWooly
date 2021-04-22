@@ -77,57 +77,6 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-关于BindResult" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/" class="article-date">
-  <time class="dt-published" datetime="2021-04-22T11:49:33.000Z" itemprop="datePublished">2021-04-22</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/">关于BindResult</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="导入依赖包"><a href="#导入依赖包" class="headerlink" title="导入依赖包"></a>导入依赖包</h3><p>Bean-validator.jar</p>
-<h3 id="实体类上标记验证方式"><a href="#实体类上标记验证方式" class="headerlink" title="实体类上标记验证方式"></a>实体类上标记验证方式</h3><p>1.参数上标记</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="meta">@NotEmpty(message = &quot;学生姓名不为空&quot;)</span></span><br><span class="line">  <span class="keyword">private</span> String sname;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@NotEmpty</span></span><br><span class="line">  <span class="meta">@Size(min=18,max=24)</span></span><br><span class="line">  <span class="comment">//@Size只适合验证Array，Collection，Map，String</span></span><br><span class="line">  <span class="keyword">private</span> String password;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@Max(24)</span></span><br><span class="line">  <span class="meta">@Min(18,message = &quot;年龄必须大于18岁&quot;)</span></span><br><span class="line">  <span class="meta">@NotEmpty</span></span><br><span class="line">  <span class="comment">//int类型在表单值为“”时无法转换为int，Interger可以为null</span></span><br><span class="line">  <span class="keyword">private</span> Interger age;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@AssertTrue</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> ifAgree;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@Email(message=&quot;邮箱格式错误&quot;)</span></span><br><span class="line">	<span class="keyword">private</span> String email;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//省略封装</span></span><br><span class="line">  </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>2.controller控制层写参数接收的入口，需要注意的是@Valid 和 BindingResult 是一 一对应的，如果有多个@Valid，那么每个@Valid后面都需要添加BindingResult用于接收bean中的校验信息</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">testBindingResult</span><span class="params">(<span class="meta">@Valid</span> <span class="meta">@RequestBody</span> Student student,BindingResult bindingResult)</span></span></span><br><span class="line"><span class="function">			</span>&#123;</span><br><span class="line">		log.info(<span class="string">&quot;test start&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(bindingResult.hasErrors())&#123;</span><br><span class="line">			 List&lt;FieldError&gt; fieldErrors = bindingResult.getFieldErrors();</span><br><span class="line">			 fieldErrors.forEach(fieldError -&gt; &#123;</span><br><span class="line">                   <span class="comment">//日志打印不符合校验的字段名和错误提示</span></span><br><span class="line">                   log.error(<span class="string">&quot;error field is : &#123;&#125; ,message is : &#123;&#125;&quot;</span>, fieldError.getField(), fieldError.getDefaultMessage());</span><br><span class="line">                 &#125;);</span><br><span class="line">			 <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;fieldErrors.size();i++)&#123;</span><br><span class="line">                    <span class="comment">//控制台打印不符合校验的字段名和错误提示</span></span><br><span class="line">			System.out.println(<span class="string">&quot;error field is :&quot;</span>+fieldErrors.get(i).getField()+<span class="string">&quot;,message is :&quot;</span>+fieldErrors.get(i).getDefaultMessage());</span><br><span class="line">			 &#125;</span><br><span class="line">		&#125;</span><br><span class="line">  System.out.println(<span class="string">&quot;bindresult无错误&quot;</span>);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/" data-id="cknststml0000smse0qkufzyd" data-title="关于BindResult" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
     <article id="post-Maven工程下通过ObjectMapper实现JSON和对象转换" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/22/Maven%E5%B7%A5%E7%A8%8B%E4%B8%8B%E9%80%9A%E8%BF%87ObjectMapper%E5%AE%9E%E7%8E%B0JSON%E5%92%8C%E5%AF%B9%E8%B1%A1%E8%BD%AC%E6%8D%A2/" class="article-date">
@@ -172,7 +121,58 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/04/22/Maven%E5%B7%A5%E7%A8%8B%E4%B8%8B%E9%80%9A%E8%BF%87ObjectMapper%E5%AE%9E%E7%8E%B0JSON%E5%92%8C%E5%AF%B9%E8%B1%A1%E8%BD%AC%E6%8D%A2/" data-id="cknststmp0001smse11l41337" data-title="Maven工程下通过ObjectMapper实现JSON和对象转换" class="article-share-link">分享</a>
+      <a data-url="https://alexwooly.gitee.io/2021/04/22/Maven%E5%B7%A5%E7%A8%8B%E4%B8%8B%E9%80%9A%E8%BF%87ObjectMapper%E5%AE%9E%E7%8E%B0JSON%E5%92%8C%E5%AF%B9%E8%B1%A1%E8%BD%AC%E6%8D%A2/" data-id="cknsuf5al0000w7se7kk1g1o5" data-title="Maven工程下通过ObjectMapper实现JSON和对象转换" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-关于BindResult" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/" class="article-date">
+  <time class="dt-published" datetime="2021-04-22T11:49:33.000Z" itemprop="datePublished">2021-04-22</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/">关于BindResult</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="导入依赖包"><a href="#导入依赖包" class="headerlink" title="导入依赖包"></a>导入依赖包</h3><p>Bean-validator.jar</p>
+<h3 id="实体类上标记验证方式"><a href="#实体类上标记验证方式" class="headerlink" title="实体类上标记验证方式"></a>实体类上标记验证方式</h3><p>1.参数上标记</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="meta">@NotEmpty(message = &quot;学生姓名不为空&quot;)</span></span><br><span class="line">  <span class="keyword">private</span> String sname;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@NotEmpty</span></span><br><span class="line">  <span class="meta">@Size(min=18,max=24)</span></span><br><span class="line">  <span class="comment">//@Size只适合验证Array，Collection，Map，String</span></span><br><span class="line">  <span class="keyword">private</span> String password;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@Max(24)</span></span><br><span class="line">  <span class="meta">@Min(18,message = &quot;年龄必须大于18岁&quot;)</span></span><br><span class="line">  <span class="meta">@NotEmpty</span></span><br><span class="line">  <span class="comment">//int类型在表单值为“”时无法转换为int，Interger可以为null</span></span><br><span class="line">  <span class="keyword">private</span> Interger age;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@AssertTrue</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> ifAgree;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@Email(message=&quot;邮箱格式错误&quot;)</span></span><br><span class="line">	<span class="keyword">private</span> String email;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//省略封装</span></span><br><span class="line">  </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>2.controller控制层写参数接收的入口，需要注意的是@Valid 和 BindingResult 是一 一对应的，如果有多个@Valid，那么每个@Valid后面都需要添加BindingResult用于接收bean中的校验信息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">testBindingResult</span><span class="params">(<span class="meta">@Valid</span> <span class="meta">@RequestBody</span> Student student,BindingResult bindingResult)</span></span></span><br><span class="line"><span class="function">			</span>&#123;</span><br><span class="line">		log.info(<span class="string">&quot;test start&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(bindingResult.hasErrors())&#123;</span><br><span class="line">			 List&lt;FieldError&gt; fieldErrors = bindingResult.getFieldErrors();</span><br><span class="line">			 fieldErrors.forEach(fieldError -&gt; &#123;</span><br><span class="line">                   <span class="comment">//日志打印不符合校验的字段名和错误提示</span></span><br><span class="line">                   log.error(<span class="string">&quot;error field is : &#123;&#125; ,message is : &#123;&#125;&quot;</span>, fieldError.getField(), fieldError.getDefaultMessage());</span><br><span class="line">                 &#125;);</span><br><span class="line">			 <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;fieldErrors.size();i++)&#123;</span><br><span class="line">                    <span class="comment">//控制台打印不符合校验的字段名和错误提示</span></span><br><span class="line">			System.out.println(<span class="string">&quot;error field is :&quot;</span>+fieldErrors.get(i).getField()+<span class="string">&quot;,message is :&quot;</span>+fieldErrors.get(i).getDefaultMessage());</span><br><span class="line">			 &#125;</span><br><span class="line">		&#125;</span><br><span class="line">  System.out.println(<span class="string">&quot;bindresult无错误&quot;</span>);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/" data-id="cknsuf5ap0001w7sef3e34i7a" data-title="关于BindResult" class="article-share-link">分享</a>
       
       
       
@@ -223,7 +223,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/04/17/hello-world/" data-id="cknststmq0002smsecv9u48bf" data-title="Hello World" class="article-share-link">分享</a>
+      <a data-url="https://alexwooly.gitee.io/2021/04/17/hello-world/" data-id="cknsuf5av0002w7sed4gq8w8n" data-title="Hello World" class="article-share-link">分享</a>
       
       
       
@@ -266,11 +266,11 @@
       <ul>
         
           <li>
-            <a href="/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/">关于BindResult</a>
+            <a href="/2021/04/22/Maven%E5%B7%A5%E7%A8%8B%E4%B8%8B%E9%80%9A%E8%BF%87ObjectMapper%E5%AE%9E%E7%8E%B0JSON%E5%92%8C%E5%AF%B9%E8%B1%A1%E8%BD%AC%E6%8D%A2/">Maven工程下通过ObjectMapper实现JSON和对象转换</a>
           </li>
         
           <li>
-            <a href="/2021/04/22/Maven%E5%B7%A5%E7%A8%8B%E4%B8%8B%E9%80%9A%E8%BF%87ObjectMapper%E5%AE%9E%E7%8E%B0JSON%E5%92%8C%E5%AF%B9%E8%B1%A1%E8%BD%AC%E6%8D%A2/">Maven工程下通过ObjectMapper实现JSON和对象转换</a>
+            <a href="/2021/04/22/%E5%85%B3%E4%BA%8EBindResult/">关于BindResult</a>
           </li>
         
           <li>
