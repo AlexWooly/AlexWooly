@@ -100,18 +100,15 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
         <h3 id="JAVA多线程第二篇"><a href="#JAVA多线程第二篇" class="headerlink" title="JAVA多线程第二篇"></a>JAVA多线程第二篇</h3><h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>多线程系列参考CSDN优秀博主的文章，中间加以自己的代码和理解，同时进行一些知识点的概括。</p>
-<p>遵循CC 4.0 BY-SA版权协议，博主原文链接（<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_35598736/article/details/108431422%EF%BC%89">https://blog.csdn.net/qq_35598736/article/details/108431422）</a></p>
 <h4 id="上下文切换"><a href="#上下文切换" class="headerlink" title="上下文切换"></a>上下文切换</h4><p>1.线程的cpu时间片用完<br>2.垃圾回收<br>3.线程自己调用了 sleep、yield、wait、join、park、synchronized、lock 等方法</p>
 <p>当发生上下文切换时，操作系统会保存当前线程的状态，并恢复另一个线程的状态,存储在jvm程序计数器中，用于记录线程执行到哪一行代码,是线程私有的。</p>
-<h4 id="yield线程礼让"><a href="#yield线程礼让" class="headerlink" title="yield线程礼让"></a>yield线程礼让</h4><p>yield()方法会让运行中的线程切换到就绪状态，重新争抢cpu的时间片，争抢时是否获取到时间片看cpu的分配。</p>
+<h4 id="yield-线程礼让"><a href="#yield-线程礼让" class="headerlink" title="yield()线程礼让"></a>yield()线程礼让</h4><p>yield()方法会让运行中的线程切换到就绪状态，重新争抢cpu的时间片，争抢时是否获取到时间片看cpu的分配。</p>
 <p>使用：在线程内部调用Thread.yield()</p>
 <h4 id="线程优先级"><a href="#线程优先级" class="headerlink" title="线程优先级"></a>线程优先级</h4><p>默认NORM_PRIORITY:5   用1-10来表示优先级，10最高</p>
 <p>通过thread.setPriority(int newPriority)设置</p>
 <h4 id="守护线程"><a href="#守护线程" class="headerlink" title="守护线程"></a>守护线程</h4><p>默认情况下，java进程需要等待所有线程都运行结束，才会结束，有一种特殊线程叫守护线程，当所有的非守护线程都结束后，即使它没有执行完，也会强制结束。默认的线程都是非守护线程。垃圾回收线程就是典型的守护线程。</p>
 <p>通过thread.setDaemon(true)设置    // 默认是false，当主线程结束后。thread继续运行，程序不停止</p>
-<h4 id="线程阻塞"><a href="#线程阻塞" class="headerlink" title="线程阻塞"></a>线程阻塞</h4><blockquote>
-<p>1.BIO阻塞，即使用了阻塞式的io流<br>2.sleep(long time) 让线程休眠进入阻塞状态<br>3.a.join() 调用该方法的线程进入阻塞，等待a线程执行完恢复运行<br>4.sychronized或ReentrantLock 造成线程未获得锁进入阻塞状态<br>5.获得锁之后调用wait()方法 也会让线程进入阻塞状态<br>6.LockSupport.park() 让线程进入阻塞状态</p>
-</blockquote>
+<h4 id="线程阻塞"><a href="#线程阻塞" class="headerlink" title="线程阻塞"></a>线程阻塞</h4><p>1.BIO阻塞，即使用了阻塞式的io流<br>2.sleep(long time) 让线程休眠进入阻塞状态<br>3.a.join() 调用该方法的线程进入阻塞，等待a线程执行完恢复运行<br>4.sychronized或ReentrantLock 造成线程未获得锁进入阻塞状态<br>5.获得锁之后调用wait()方法 也会让线程进入阻塞状态<br>6.LockSupport.park() 让线程进入阻塞状态</p>
 <h4 id="sleep（）"><a href="#sleep（）" class="headerlink" title="sleep（）"></a>sleep（）</h4><p>线程休眠，睡醒了再重新争夺cpu时间片</p>
 <p>thread.sleep(1000)</p>
 <h4 id="join（）"><a href="#join（）" class="headerlink" title="join（）"></a>join（）</h4><p> join是指调用该方法的线程（当前）进入阻塞状态，等待某线程执行完成后恢复运行</p>
@@ -120,8 +117,8 @@
 
 
 
-<h4 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h4><h6 id="操作系统层面五种状态"><a href="#操作系统层面五种状态" class="headerlink" title="操作系统层面五种状态"></a>操作系统层面五种状态</h6><p>1.初始状态：创建线程对象时的状态<br>2.可运行状态(就绪状态)：调用start()方法后进入就绪状态，也就是准备好被cpu调度执行<br>3.运行状态：线程获取到cpu的时间片，执行run()方法的逻辑<br>4.阻塞状态: 线程被阻塞，放弃cpu的时间片，等待解除阻塞重新回到就绪状态争抢时间片<br>5.终止状态: 线程执行完成或抛出异常后的状态</p>
-<h6 id="java-api层面六种状态"><a href="#java-api层面六种状态" class="headerlink" title="java api层面六种状态"></a>java api层面六种状态</h6><p>1.NEW 线程对象被创建<br>2.Runnable 线程调用了start()方法后进入该状态，该状态包含了三种情况<br>3.就绪状态 :等待cpu分配时间片<br>4.运行状态:进入Runnable方法执行任务<br>5.阻塞状态:BIO 执行阻塞式io流时的状态<br>6.Blocked 没获取到锁时的阻塞状态(同步锁章节会细说)<br>7.WAITING 调用wait()、join()等方法后的状态<br>8.TIMED_WAITING 调用 sleep(time)、wait(time)、join(time)等方法后的状态<br>9.TERMINATED 线程执行完成或抛出异常后的状态</p>
+<h4 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h4><h6 id="操作系统层面五种状态"><a href="#操作系统层面五种状态" class="headerlink" title="操作系统层面五种状态"></a>操作系统层面五种状态</h6><p>1.初始状态：创建线程对象时的状态，未与操作系统线程相关联<br>2.可运行状态(就绪状态)：创建完成，调用start()方法后进入就绪状态，准备好被cpu调度执行<br>3.运行状态：线程获取到cpu的时间片，开始执行run()方法的逻辑<br>4.阻塞状态: 线程被阻塞，放弃cpu的时间片，等待解除阻塞重新回到就绪状态争抢时间片<br>5.终止状态:  线程已执行完成，不会再变成别的状态。</p>
+<h6 id="java-api层面六种状态"><a href="#java-api层面六种状态" class="headerlink" title="java api层面六种状态"></a>java api层面六种状态</h6><p>1.NEW（新建） 线程对象被创建，但还没有调用start（）<br>2.Runnable （可运行）线程调用了start()方法后进入该状态，该状态包含了三种情况<br>就绪状态 :等待cpu分配时间片<br>运行状态:进入Runnable方法执行任务<br>阻塞状态:BIO 执行阻塞式io流时的状态<br>3.Blocked（阻塞） 当线程准备进入synchronized同步块或同步方法（排它锁）的时候，需要申请一个监视器锁而进行的等待，会使线程进入BLOCKED状态。当其他线程释放了锁就会结束此状态。<br>4.WAITING（等待） 调用wait()、join()等方法后的状态，需要显示唤醒<br>5.TIMED_WAITING（限期等待） 调用 sleep(time)、wait(time)、join(time)等方法后的状态，结束时间明确<br>6.TERMINATED（死亡） 线程执行完成（run()结束）或抛出异常后的状态</p>
 
       
     </div>
