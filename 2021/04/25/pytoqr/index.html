@@ -13,14 +13,14 @@
 <meta property="og:site_name" content="AlexWoo">
 <meta property="og:description" content="利用python定制个性化二维码其中获取自己QQ或者微信加好友的链接地址，可以先保存自己QQ或微信自带的二维码，然后去解码。 我用的是 https:&#x2F;&#x2F;cli.im&#x2F;deqr（草料二维码解码） 因为代码上都加了注释，就直接附上代码了 12345678910111213from MyQR import myqrmyqr.run(    words&#x3D;&amp;#x27;https:&#x2F;&#x2F;u.wechat.com">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://alexwooly.gitee.io/.io//pi.gif">
-<meta property="og:image" content="https://alexwooly.gitee.io/.io//my_weixin.gif">
+<meta property="og:image" content="https://alexwooly.gitee.io/2021/04/25/pytoqr/pi.gif">
+<meta property="og:image" content="https://alexwooly.gitee.io/2021/04/25/pytoqr/my_weixin.gif">
 <meta property="article:published_time" content="2021-04-25T04:34:43.000Z">
 <meta property="article:modified_time" content="2021-04-25T04:52:13.735Z">
 <meta property="article:author" content="AlexWoo">
 <meta property="article:tag" content="python">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://alexwooly.gitee.io/.io//pi.gif">
+<meta name="twitter:image" content="https://alexwooly.gitee.io/2021/04/25/pytoqr/pi.gif">
   
     <link rel="alternate" href="/atom.xml" title="AlexWoo" type="application/atom+xml">
   
@@ -108,13 +108,13 @@
 <p>因为代码上都加了注释，就直接附上代码了</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> MyQR <span class="keyword">import</span> myqr</span><br><span class="line">myqr.run(</span><br><span class="line">    words=<span class="string">&#x27;https://u.wechat.com/MJmwiSDxbQLsETk7dzgcPH0&#x27;</span>,</span><br><span class="line">    <span class="comment"># 扫描二维码后，显示的内容，或是跳转的链接</span></span><br><span class="line">    version=<span class="number">5</span>,  <span class="comment"># 设置容错率</span></span><br><span class="line">    level=<span class="string">&#x27;H&#x27;</span>,  <span class="comment"># 控制纠错水平，范围是L、M、Q、H，从左到右依次升高</span></span><br><span class="line">    picture=<span class="string">&#x27;pi.gif&#x27;</span>,  <span class="comment"># 图片所在目录，可以是动图</span></span><br><span class="line">    colorized=<span class="literal">True</span>,  <span class="comment"># 黑白(False)还是彩色(True)</span></span><br><span class="line">    contrast=<span class="number">1.0</span>,  <span class="comment"># 用以调节图片的对比度，1.0 表示原始图片。默认为1.0。</span></span><br><span class="line">    brightness=<span class="number">1.0</span>,  <span class="comment"># 用来调节图片的亮度，用法同上。</span></span><br><span class="line">    save_name=<span class="string">&#x27;my_weixin.gif&#x27;</span>,  <span class="comment"># 控制输出文件名，格式可以是 .jpg， .png ，.bmp ，.gif</span></span><br><span class="line">    )</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<h4 id="我选用的背景图"><a href="#我选用的背景图" class="headerlink" title="我选用的背景图"></a>我选用的背景图</h4><img src="/.io//pi.gif" width="50%" height="50%">
+<h4 id="我选用的背景图"><a href="#我选用的背景图" class="headerlink" title="我选用的背景图"></a>我选用的背景图</h4><img src="/2021/04/25/pytoqr/pi.gif" width="50%" height="50%">
 
-<h5 id="最终效果（我的微信）"><a href="#最终效果（我的微信）" class="headerlink" title="最终效果（我的微信）"></a>最终效果（我的微信）</h5><img src="/.io//my_weixin.gif" width="50%" height="50%">
+<h5 id="最终效果（我的微信）"><a href="#最终效果（我的微信）" class="headerlink" title="最终效果（我的微信）"></a>最终效果（我的微信）</h5><img src="/2021/04/25/pytoqr/my_weixin.gif" width="50%" height="50%">
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/04/25/pytoqr/" data-id="cknwpatte0004su9i5z25drsd" data-title="利用python定制个性化二维码" class="article-share-link">分享</a>
+      <a data-url="https://alexwooly.gitee.io/2021/04/25/pytoqr/" data-id="cknwpgnje0007y69ighqe4o4q" data-title="利用python定制个性化二维码" class="article-share-link">分享</a>
       
       
       
