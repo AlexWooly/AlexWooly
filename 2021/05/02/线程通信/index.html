@@ -14,7 +14,7 @@
 <meta property="og:description" content="Java多线程 第四篇 线程通信一.wait + notifywait()将线程进入阻塞状态，notify()将线程唤醒 当多线程竞争访问对象的同步方法时，锁对象会关联一个底层的Monitor对象(重量级锁的实现)，获取到锁，成为monitor的owner，状态为Runnable 进入代码块调用wait( )，则进入monitor的waitSet；状态为Waiting 未取得锁的进入monitor">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-05-02T14:15:31.000Z">
-<meta property="article:modified_time" content="2021-05-02T15:31:17.312Z">
+<meta property="article:modified_time" content="2021-05-03T08:09:47.645Z">
 <meta property="article:author" content="AlexWoo">
 <meta property="article:tag" content="Java多线程">
 <meta name="twitter:card" content="summary">
@@ -104,7 +104,7 @@
 <p>当多线程竞争访问对象的同步方法时，锁对象会关联一个底层的Monitor对象(重量级锁的实现)，获取到锁，成为monitor的owner，状态为Runnable</p>
 <p>进入代码块调用wait( )，则进入monitor的waitSet；状态为Waiting</p>
 <p>未取得锁的进入monitor的EntryList；状态为Blocked，在owner线程释放锁时自动唤醒</p>
-<p>调用了锁对象的notify()或notifyAll()时，会唤醒waitSet的线程，唤醒的线程进入entryList等待重新竞争锁</p>
+<p>调用了锁对象的notify()或notifyAll( )时，会唤醒waitSet的线程，唤醒的线程进入entryList等待重新竞争锁</p>
 <h4 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h4><ul>
 <li><p>wait和notify使用场景是必须要有同步，且必须获得对象的锁才能调用,使用锁对象去调用,否则会抛异常</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> Object lock = <span class="keyword">new</span> Object();</span><br><span class="line"></span><br><span class="line"><span class="keyword">synchronized</span> (lock) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          	<span class="comment">// 同步代码内部才能调用</span></span><br><span class="line">            lock.wait();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">synchronized</span> (lock) &#123;</span><br><span class="line">  <span class="comment">// 同步代码内部才能调用</span></span><br><span class="line">    lock.notifyAll();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
@@ -145,6 +145,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2021/05/03/%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          可重入锁 （篇五）
+        
+      </div>
+    </a>
   
   
     <a href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8/" id="article-nav-older" class="article-nav-link-wrap">
@@ -201,23 +210,23 @@
       <ul>
         
           <li>
+            <a href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/">JMM及volatile关键字 （篇七）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/03/%E6%AD%BB%E9%94%81/">死锁 （篇六）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/03/%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/">可重入锁 （篇五）</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1/">线程通信 （篇四）</a>
           </li>
         
           <li>
             <a href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8/">线程安全 （篇三）</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/02/swagger/">Swagger初探</a>
-          </li>
-        
-          <li>
-            <a href="/2021/04/26/jwt%E5%BE%AE%E6%9C%8D%E5%8A%A1/">Jwt微服务及其运用(单独)</a>
-          </li>
-        
-          <li>
-            <a href="/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E6%96%B9%E6%B3%95%EF%BC%88%E7%AF%87%E4%BA%8C%EF%BC%89/">Java多线程 线程知识（篇二）</a>
           </li>
         
       </ul>
