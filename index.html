@@ -77,6 +77,91 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Redis2" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/04/Redis2/" class="article-date">
+  <time class="dt-published" datetime="2021-05-04T15:18:15.000Z" itemprop="datePublished">2021-05-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/04/Redis2/">Redission</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="Redis-第二篇-Redission"><a href="#Redis-第二篇-Redission" class="headerlink" title="Redis 第二篇 Redission"></a>Redis 第二篇 Redission</h1><p>上篇在写客户端的时候提到了我用的比较多的Redission，这节就顺着整理一下。</p>
+<p>spring-boot-data-redis 默认使用 Lettuce 客户端操作数据。但Reddissin 很强大，它提供的功能远远超出了一个 Redis 客户端的范畴，使用它来替换默认的 Lettuce。在可以使用基本 Redis 功能的同时，也能使用它提供的一些高级服务：</p>
+<ul>
+<li>远程调用 </li>
+<li>分布式锁 </li>
+<li>分布式对象、容器</li>
+</ul>
+<p>简单讲一下分布式：分布式结构就是将一个完整的系统,按照业务功能,拆分成一个个独立的子系统,在分布式结构中，每个子系统就被称为“服务”。（演变过程：单机结构 -&gt; 集群结构 -&gt; 分布式结构）</p>
+<h4 id="引入依赖"><a href="#引入依赖" class="headerlink" title="引入依赖"></a>引入依赖</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-data-redis<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.redisson<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>redisson-spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.13.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="application-properties配置"><a href="#application-properties配置" class="headerlink" title="application.properties配置"></a>application.properties配置</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;redis启动主机ip</span><br><span class="line">spring.redis.host&#x3D;</span><br><span class="line">&#x2F;&#x2F;redis端口号</span><br><span class="line">spring.redis.port&#x3D;</span><br><span class="line">&#x2F;&#x2F;redis登录密码</span><br><span class="line">spring.redis.password&#x3D;</span><br></pre></td></tr></table></figure>
+
+<h2 id="两个常用应用"><a href="#两个常用应用" class="headerlink" title="两个常用应用"></a>两个常用应用</h2><h3 id="一-分布式ID"><a href="#一-分布式ID" class="headerlink" title="一.分布式ID"></a>一.分布式ID</h3><p>ID 是数据的唯一标识，传统的做法是利用 UUID 和数据库的自增 ID。</p>
+<p>但由于 UUID 是无序的，不能附带一些其他信息。比如需要生成员工号，这个一般是用数据库递增， UUID 是无法完成这个需求的。</p>
+<p>再来说自增 ID，随着业务的发展，数据量会越来越大，需要对数据进行分表，甚至分库。分表后每个表的数据会按自己的节奏来自增，这样会造成 ID 冲突，这时就需要一个单独的机制来负责生成唯一 ID。</p>
+<p>举例：淘宝的订单号</p>
+<p>代码实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.redisson.api.RAtomicLong;</span><br><span class="line"><span class="keyword">import</span> org.redisson.api.RedissonClient;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Controller;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.GetMapping;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.ResponseBody;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.time.LocalDate;</span><br><span class="line"><span class="keyword">import</span> java.time.format.DateTimeFormatter;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.TimeUnit;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AutoIdController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    RedissonClient redissonClient;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/getautoid&quot;)</span></span><br><span class="line">    <span class="meta">@ResponseBody</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getAutoId</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//格式化格式为年月日</span></span><br><span class="line">        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(<span class="string">&quot;yyyyMMdd&quot;</span>);</span><br><span class="line">        <span class="comment">//获取当前时间</span></span><br><span class="line">        String now = LocalDate.now().format(dateTimeFormatter);</span><br><span class="line">        <span class="comment">//通过redis的自增获取序号</span></span><br><span class="line">        RAtomicLong atomicLong = redissonClient.getAtomicLong(now);</span><br><span class="line">        atomicLong.expire(<span class="number">1</span>, TimeUnit.DAYS);</span><br><span class="line">        <span class="comment">//拼装订单号</span></span><br><span class="line">        <span class="keyword">return</span> now + <span class="string">&quot;&quot;</span> + atomicLong.incrementAndGet();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">202105041</span><br></pre></td></tr></table></figure>
+
+<p>嫌不够长，还可以这样<strong>String.format(“%08d”, xxx);</strong>%04d 表示输出时指定格式为使用 0 在左侧补齐至 8 位。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> now + <span class="string">&quot;&quot;</span> + String.format(<span class="string">&quot;%08d&quot;</span>,atomicLong.incrementAndGet());</span><br></pre></td></tr></table></figure>
+
+<p>运行结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">202105040000002</span><br></pre></td></tr></table></figure>
+
+<h3 id="二-分布式锁"><a href="#二-分布式锁" class="headerlink" title="二.分布式锁"></a>二.分布式锁</h3><p>锁，在 Java 中 synchronized 关键字很常见，这些都是<strong>本地锁</strong>，只能解决一台服务器并发问题。</p>
+<p>但是随着业务量不断增大，单机结构不满足那么大的访问量，需要变成集群或者分布式结构，因此无法保证某个数据的改变是同一台服务器操作的。我们需要的是一个能锁所有服务器的锁，这时就需要<strong>分布式锁</strong>。</p>
+<h4 id="实现Redis分布-三步"><a href="#实现Redis分布-三步" class="headerlink" title="实现Redis分布  三步"></a><strong>实现Redis分布  三步</strong></h4><h5 id="取得锁"><a href="#取得锁" class="headerlink" title="取得锁"></a>取得锁</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//CUSTOM_NAME 自定义锁名称字符串，一般是跟业务相关的名称</span></span><br><span class="line"> <span class="comment">//Rlock 继承于 java.util.concurrent.locks.Lock;(又是Lock类！！)</span></span><br><span class="line"> RLock rLock = redissonClient.getLock(<span class="string">&quot;CUSTOM_NAME&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h5 id="上锁"><a href="#上锁" class="headerlink" title="上锁"></a>上锁</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 上锁过程</span></span><br><span class="line"><span class="comment"> * 两种常用上锁方式tryLock()或者lock()</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"> rLock.tryLock();</span><br></pre></td></tr></table></figure>
+
+<h5 id="解锁-有上锁就必须解锁，否则会导致死锁，系统也就卡死了。"><a href="#解锁-有上锁就必须解锁，否则会导致死锁，系统也就卡死了。" class="headerlink" title="解锁(有上锁就必须解锁，否则会导致死锁，系统也就卡死了。)"></a>解锁(有上锁就必须解锁，否则会导致死锁，系统也就卡死了。)</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//解锁</span></span><br><span class="line"> rLock.unlock();</span><br></pre></td></tr></table></figure>
+
+<p>代码实操，模拟商品购买</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line">`<span class="keyword">package</span> com.example.demo;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.redisson.api.RLock;</span><br><span class="line"><span class="keyword">import</span> org.redisson.api.RedissonClient;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.StringRedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Controller;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.PostMapping;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.ResponseBody;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.annotation.PostConstruct;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProductController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    RedissonClient redissonClient;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    StringRedisTemplate stringRedisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> List&lt;Product&gt; products = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LoggerFactory.getLogger(ProductController.class);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 初始化数据</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@PostConstruct</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        products.add(<span class="keyword">new</span> Product(<span class="string">&quot;1&quot;</span>));</span><br><span class="line">        products.add(<span class="keyword">new</span> Product(<span class="string">&quot;2&quot;</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PostMapping(&quot;/purchase&quot;)</span></span><br><span class="line">    <span class="meta">@ResponseBody</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">purchase</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//获取分布式锁</span></span><br><span class="line">        RLock transferLock = redissonClient.getLock(<span class="string">&quot;PURCHASE&quot;</span>);</span><br><span class="line"></span><br><span class="line">        transferLock.lock();</span><br><span class="line">        <span class="comment">//业务逻辑卸载try...catch中 ，finally最后一定要释放锁</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//尝试获取锁</span></span><br><span class="line">            Product product = findById(<span class="string">&quot;1&quot;</span>); <span class="comment">//为了方便测试，直接写死，实际商品代码应有用户post</span></span><br><span class="line">            <span class="keyword">if</span> (product.getStock() &lt; <span class="number">1</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="string">&quot;商品已经卖完啦！！！&quot;</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            product.setStock(product.getStock() - <span class="number">1</span>);</span><br><span class="line">            updateProduct(product);</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;商品购买成功！！！&quot;</span>;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            logger.error(<span class="string">&quot;&quot;</span>,e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">// 无论是否出现异常，一定解锁</span></span><br><span class="line">            transferLock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;商品购买失败&quot;</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 根据id查询商品</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> id 唯一id</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> Product</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Product <span class="title">findById</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (Product product : products) &#123;</span><br><span class="line">            <span class="keyword">if</span> (product.getId().equals(id)) &#123;</span><br><span class="line">                <span class="keyword">return</span> product;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Product <span class="title">updateProduct</span><span class="params">(Product product)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; products.size(); i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (products.get(i).getId().equals(product.getId())) &#123;</span><br><span class="line">                products.set(i, product);</span><br><span class="line">                <span class="keyword">return</span> product;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Product类</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.youkeda.app.model;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * TODO</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> zr</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2020/6/2, 周二</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 商品唯一Id</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> String id;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 库存</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> Long stock = <span class="number">2L</span>;  <span class="comment">//方便测试，请求到第三次时应该为购买失败</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Product</span><span class="params">(<span class="keyword">final</span> String id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setId</span><span class="params">(<span class="keyword">final</span> String id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Long <span class="title">getStock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> stock;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setStock</span><span class="params">(<span class="keyword">final</span> Long stock)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.stock = stock;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>请求三次时</p>
+<img src="/2021/05/04/Redis2/Redis2.png" width="90%" height="90%">
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/04/Redis2/" data-id="ckoa6j9nm0003669icvgfaiyd" data-title="Redission" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-无锁cas(八)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/" class="article-date">
@@ -552,6 +637,111 @@
 
 
   
+    <article id="post-Redis" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/02/Redis/" class="article-date">
+  <time class="dt-published" datetime="2021-05-02T08:17:44.000Z" itemprop="datePublished">2021-05-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/02/Redis/">Redis 开搞！</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="Redis-第一篇-介绍，安装，Spring集成"><a href="#Redis-第一篇-介绍，安装，Spring集成" class="headerlink" title="Redis 第一篇 介绍，安装，Spring集成"></a>Redis 第一篇 介绍，安装，Spring集成</h2><p>新数据裤的爆发结束了关系型数据库的统治地位（如Mysql等，虽然结束了统治地位，但使用频率和影响力依旧高居前位），新兴的数据库在NoSQL（非关系型数据库）的大旗下各显神通（衍生了非常多的派别，Redis，MongoDB，图谱型数据库-neo4j等等等等），以键值对，嵌套文档，甚至关系图谱来存储数据。</p>
+<blockquote>
+<p>NoSQL 它是”Not Only SQL”的缩写指的是非关系型数据库，而我们常用的都是关系型数据库。就像我们常用的 mysql，sqlserver 一样，这些数据库一般用来存储重要信息，应对普通的业务是没有问题的。随着互联网的高速发展，传统的关系型数据库在应付超大规模，超大流量以及高并发的时候力不从心,这就需要使用到像 Redis 这样的 NoSQL 数据库。</p>
+</blockquote>
+<p>本系列记录了NoSQL中的佼佼者–<strong>Redis</strong></p>
+<h3 id="Redis的优点"><a href="#Redis的优点" class="headerlink" title="Redis的优点"></a>Redis的优点</h3><p>**1.基于内存运行,性能高效 **</p>
+<p><strong>2.支持分布式，理论上可以无限扩展</strong></p>
+<p><strong>3.丰富的数据类型</strong>         Redis 支持 Strings, Lists, Hashes, Sets 及 Ordered Sets 等数据类型操作</p>
+<h3 id="Redis安装"><a href="#Redis安装" class="headerlink" title="Redis安装"></a>Redis安装</h3><p>云服务器安装，我用的是阿里云，其他云服务器操作不便，Redis也能安装到本地</p>
+<h5 id="1-安装Docker"><a href="#1-安装Docker" class="headerlink" title="1.安装Docker"></a>1.安装Docker</h5><p><strong>Docker</strong> ：一个开源的应用容器引擎，基于 <a target="_blank" rel="noopener" href="https://www.runoob.com/go/go-tutorial.html">Go 语言</a> 并遵从 Apache2.0 协议开源。</p>
+<p>Docker 可以让开发者打包他们的应用以及依赖包到一个轻量级、可移植的容器中，然后发布到任何流行的 Linux 机器上，也可以实现虚拟化。</p>
+<p>Docker作为近年来最火的虚拟化技术之一，有很多强大的功能和作用，这里不深入讲解（主要我自己也没了解太深），这边简单来说就是利用Docker这个<strong>便携应用容器</strong>进行Redis安装。</p>
+<p>docker 一键运行MySQL数据库：<strong>docker run -d -p 3306:3306 tutum/mysql</strong></p>
+<p><strong>登陆云服务器后，依此输入下面的命令，回车执行</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo yum -y update</span><br><span class="line">sudo yum -y install epel-release</span><br><span class="line">sudo yum -y install docker-io</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="2-安装Redis"><a href="#2-安装Redis" class="headerlink" title="2.安装Redis"></a>2.安装Redis</h5><p><strong>先启动Docker</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl start docker</span><br><span class="line">sudo docker version</span><br></pre></td></tr></table></figure>
+
+<p><strong>安装Redis并启动</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo docker pull redis:latest</span><br><span class="line">sudo docker images</span><br><span class="line">sudo docker run  --name redis -p 6379:6379 -d --restart&#x3D;always redis:latest redis-server --appendonly yes --requirepass &quot;输入自己的服务器密码&quot;</span><br></pre></td></tr></table></figure>
+
+<p><strong>验证是否启动成功</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker ps</span><br></pre></td></tr></table></figure>
+
+<p><strong>端口号开启</strong></p>
+<p>阿里云服务器上手动开启<strong>6379</strong>端号</p>
+<h3 id="Spring集成Redis"><a href="#Spring集成Redis" class="headerlink" title="Spring集成Redis"></a>Spring集成Redis</h3><p><strong>Redis 客户端</strong>：所谓客户端，有时也叫开发包，因为SpringBoot 项目实际上是通过网络来使用和操作 Redis（Mysql也是网络远程调用），如果没有客户端，使用起来会很复杂，客户端的主要作用是为了更好的使用 Redis，提供了一整套操作接口或操作工具类。</p>
+<h4 id="常见三种客户端"><a href="#常见三种客户端" class="headerlink" title="常见三种客户端"></a><strong>常见三种客户端</strong></h4><ol>
+<li><p>Lettuce 客户端</p>
+<p>Spring Boot 2.0 之后默认集成的，高级 Redis 客户端，用于线程安全同步，异步和响应使用，支持集群。它的优势是支持同步、异步和响应式模式，多个线程可以共享一个连接实例，而不必担心多线程并发问题。</p>
+</li>
+<li><p>Jedis 客户端</p>
+<p>是老牌的 Redis 的 Java 实现客户端，提供了比较全面的 Redis 命令的支持，Spring Boot 2.0 之前默认使用的，现在已不推荐使用。</p>
+</li>
+<li><p>Redission 客户端(我用的比较多)</p>
+<p>实现了分布式和可扩展的 Java 数据结构。它的优势提供很多分布式相关操作服务。</p>
+</li>
+</ol>
+<h4 id="springboot集成"><a href="#springboot集成" class="headerlink" title="springboot集成"></a>springboot集成</h4><h5 id="一-引入依赖"><a href="#一-引入依赖" class="headerlink" title="一.引入依赖"></a>一.引入依赖</h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-data-redis<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="二-application-properties配置-Redis-服务器相关配置"><a href="#二-application-properties配置-Redis-服务器相关配置" class="headerlink" title="二.application.properties配置 Redis 服务器相关配置"></a>二.application.properties配置 Redis 服务器相关配置</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Redis服务器地址</span><br><span class="line">spring.redis.host= <span class="number">123.45</span><span class="number">.656</span><span class="number">.218</span></span><br><span class="line"># Redis 服务器端口号</span><br><span class="line">spring.redis.port= <span class="number">6379</span></span><br><span class="line"># Redis 服务器密码 （请换成自己机器密码）</span><br><span class="line">spring.redis.password=</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="三-启动应用"><a href="#三-启动应用" class="headerlink" title="三.启动应用"></a>三.启动应用</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.StringRedisTemplate</span><br><span class="line"></span><br><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoController</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> StringRedisTemplate stringRedisTemplate;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/02/Redis/" data-id="ckoa6j9nd0000669idruw2zer" data-title="Redis 开搞！" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-jwt微服务" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/26/jwt%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="article-date">
@@ -623,190 +813,6 @@
 
 
   
-    <article id="post-Java多线程 线程方法（篇二）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E6%96%B9%E6%B3%95%EF%BC%88%E7%AF%87%E4%BA%8C%EF%BC%89/" class="article-date">
-  <time class="dt-published" datetime="2021-04-25T12:34:48.000Z" itemprop="datePublished">2021-04-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E6%96%B9%E6%B3%95%EF%BC%88%E7%AF%87%E4%BA%8C%EF%BC%89/">Java多线程 线程知识（篇二）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="JAVA多线程-第二篇-线程操作"><a href="#JAVA多线程-第二篇-线程操作" class="headerlink" title="JAVA多线程 第二篇 线程操作"></a>JAVA多线程 第二篇 线程操作</h2><h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>多线程系列参考CSDN优秀博主的文章，中间加以自己的代码和理解，同时进行一些知识点的概括。</p>
-<h4 id="上下文切换"><a href="#上下文切换" class="headerlink" title="上下文切换"></a>上下文切换</h4><p>1.线程的cpu时间片用完<br>2.垃圾回收<br>3.线程自己调用了 sleep、yield、wait、join、park、synchronized、lock 等方法</p>
-<p>当发生上下文切换时，操作系统会保存当前线程的状态，并恢复另一个线程的状态,存储在jvm程序计数器中，用于记录线程执行到哪一行代码,是线程私有的。</p>
-<h4 id="yield-线程礼让"><a href="#yield-线程礼让" class="headerlink" title="yield()线程礼让"></a>yield()线程礼让</h4><p>yield()方法会让运行中的线程切换到就绪状态，重新争抢cpu的时间片，争抢时是否获取到时间片看cpu的分配。</p>
-<p>使用：在线程内部调用Thread.yield()</p>
-<h4 id="线程优先级"><a href="#线程优先级" class="headerlink" title="线程优先级"></a>线程优先级</h4><p>默认NORM_PRIORITY:5   用1-10来表示优先级，10最高</p>
-<p>通过thread.setPriority(int newPriority)设置</p>
-<h4 id="守护线程"><a href="#守护线程" class="headerlink" title="守护线程"></a>守护线程</h4><p>默认情况下，java进程需要等待所有线程都运行结束，才会结束，有一种特殊线程叫守护线程，当所有的非守护线程都结束后，即使它没有执行完，也会强制结束。默认的线程都是非守护线程。垃圾回收线程就是典型的守护线程。</p>
-<p>通过thread.setDaemon(true)设置    // 默认是false，当主线程结束后。thread继续运行，程序不停止</p>
-<h4 id="线程阻塞"><a href="#线程阻塞" class="headerlink" title="线程阻塞"></a>线程阻塞</h4><p>1.BIO阻塞，即使用了阻塞式的io流<br>2.sleep(long time) 让线程休眠进入阻塞状态<br>3.a.join() 调用该方法的线程进入阻塞，等待a线程执行完恢复运行<br>4.sychronized或ReentrantLock 造成线程未获得锁进入阻塞状态<br>5.获得锁之后调用wait()方法 也会让线程进入阻塞状态<br>6.LockSupport.park() 让线程进入阻塞状态</p>
-<h4 id="sleep（）"><a href="#sleep（）" class="headerlink" title="sleep（）"></a>sleep（）</h4><p>线程休眠，睡醒了再重新争夺cpu时间片</p>
-<p>thread.sleep(1000)</p>
-<h4 id="join（）"><a href="#join（）" class="headerlink" title="join（）"></a>join（）</h4><p> join是指调用该方法的线程（当前）进入阻塞状态，等待某线程执行完成后恢复运行</p>
-<p>thread.join()    即为等待thread执行完后再继续执行当前线程</p>
-<h4 id="线程打断"><a href="#线程打断" class="headerlink" title="线程打断"></a>线程打断</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 相关方法的定义</span></span><br><span class="line"><span class="comment">//interrupt()方法用于中断线程</span></span><br><span class="line"><span class="comment">//可以打断sleep,wait,join等显式的抛出InterruptedException方法的线程，但是打断后,线程的打断标记还是false，打断正常线程 ，线程不会真正被中断，但是线程的打断标记为true</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">interrupt</span><span class="params">()</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获取线程打断标志</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isInterrupted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//interrupted() 获取线程的打断标记，调用后清空打断标记 即如果获取为true 调用后打断标记为false (不常用)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">interrupted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h4><h6 id="操作系统层面五种状态"><a href="#操作系统层面五种状态" class="headerlink" title="操作系统层面五种状态"></a>操作系统层面五种状态</h6><p>1.初始状态：创建线程对象时的状态，未与操作系统线程相关联<br>2.可运行状态(就绪状态)：创建完成，调用start()方法后进入就绪状态，准备好被cpu调度执行<br>3.运行状态：线程获取到cpu的时间片，开始执行run()方法的逻辑<br>4.阻塞状态: 线程被阻塞，放弃cpu的时间片，等待解除阻塞重新回到就绪状态争抢时间片<br>5.终止状态:  线程已执行完成，不会再变成别的状态。</p>
-<h6 id="java-api层面六种状态"><a href="#java-api层面六种状态" class="headerlink" title="java api层面六种状态"></a>java api层面六种状态</h6><p>1.NEW（新建） 线程对象被创建，但还没有调用start（）<br>2.Runnable （可运行）线程调用了start()方法后进入该状态，该状态包含了三种情况<br>就绪状态 :等待cpu分配时间片<br>运行状态:进入Runnable方法执行任务<br>阻塞状态:BIO 执行阻塞式io流时的状态<br>3.Blocked（阻塞） 当线程准备进入synchronized同步块或同步方法（排它锁）的时候，需要申请一个监视器锁而进行的等待，会使线程进入BLOCKED状态。当其他线程释放了锁就会结束此状态。<br>4.WAITING（等待） 调用wait()、join()等方法后的状态，需要显示唤醒<br>5.TIMED_WAITING（限期等待） 调用 sleep(time)、wait(time)、join(time)等方法后的状态，结束时间明确<br>6.TERMINATED（死亡） 线程执行完成（run()结束）或抛出异常后的状态</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E6%96%B9%E6%B3%95%EF%BC%88%E7%AF%87%E4%BA%8C%EF%BC%89/" data-id="cko6zj6yy0001rj9i969gd350" data-title="Java多线程 线程知识（篇二）" class="article-share-link">分享</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-Java多线程 线程创建（篇一）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E5%88%9B%E5%BB%BA%EF%BC%88%E7%AF%87%E4%B8%80%EF%BC%89/" class="article-date">
-  <time class="dt-published" datetime="2021-04-25T09:55:55.000Z" itemprop="datePublished">2021-04-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E5%88%9B%E5%BB%BA%EF%BC%88%E7%AF%87%E4%B8%80%EF%BC%89/">Java多线程 线程创建（篇一）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="JAVA多线程-第一篇-线程创建"><a href="#JAVA多线程-第一篇-线程创建" class="headerlink" title="JAVA多线程 第一篇 线程创建"></a>JAVA多线程 第一篇 线程创建</h2><h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>给自己挖个大坑，Java多线程开搞，文章参考CSDN各位大佬的文章，再结合我自己的一些见解和语言，对于一些小的知识点进行补充和整合。</p>
-<h4 id="线程与进程"><a href="#线程与进程" class="headerlink" title="线程与进程"></a>线程与进程</h4><h6 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h6><p>启动了一个程序，即开启了一个进程，每个进程会在计算机内存中分配一个独立空间<br>程序由指令和数据组成，指令要运行，数据要加载，指令被cpu加载运行，数据被加载到内存，指令运行时可由cpu调度硬盘、网络等设备</p>
-<h6 id="线程"><a href="#线程" class="headerlink" title="线程"></a>线程</h6><p>一个进程内可分为多个线程（至少一个）<br>一个线程就是一个进程的执行单元</p>
-<h4 id="多线程的好处"><a href="#多线程的好处" class="headerlink" title="多线程的好处"></a>多线程的好处</h4><p>1.程序运行加快</p>
-<p>2.充分利用电脑多核CPU能力</p>
-<h3 id="多线程的定义"><a href="#多线程的定义" class="headerlink" title="多线程的定义"></a>多线程的定义</h3><h5 id="三种方法（不考虑匿名内部类）"><a href="#三种方法（不考虑匿名内部类）" class="headerlink" title="三种方法（不考虑匿名内部类）"></a>三种方法（不考虑匿名内部类）</h5><p><strong>1.继承Thread类</strong></p>
-<p><strong>2.实现Runnable接口</strong></p>
-<p><strong>3.实现Callable接口</strong></p>
-<h3 id="多线程的创建"><a href="#多线程的创建" class="headerlink" title="多线程的创建"></a>多线程的创建</h3><ol>
-<li><p>通过Thread类直接创建线程</p>
-</li>
-<li><p>利用线程池内部创建线程</p>
-</li>
-</ol>
-<h4 id="一-继承Thread类"><a href="#一-继承Thread类" class="headerlink" title="一.继承Thread类"></a>一.继承Thread类</h4><p>优势：编写简单，无需使用Thread.currentThread()访问当前线程，直接使用this即可获得。</p>
-<p>劣势：线程类继承了父类Thread类，<strong>无法再继承别的父类</strong></p>
-<p>代码展示</p>
-<p>MyThread类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.demo;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//可以给线程重新命名</span></span><br><span class="line">    MyThread(String name)&#123;</span><br><span class="line">        <span class="keyword">super</span>(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;=<span class="number">3</span>;i++)&#123;</span><br><span class="line">            System.out.println(<span class="keyword">this</span>.getName()+<span class="string">&quot;---&quot;</span>+i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>Main方法中</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span> ;i&lt;<span class="number">5</span>;i++)&#123;</span><br><span class="line">            MyThread thread = <span class="keyword">new</span> MyThread(String.valueOf(i+<span class="number">1</span>));</span><br><span class="line">            System.out.println(<span class="string">&quot;[线程&quot;</span>+(i+<span class="number">1</span>)+<span class="string">&quot;]正在启动！&quot;</span>);</span><br><span class="line"><span class="comment">//            thread.run();</span></span><br><span class="line">            thread.start();</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-
-<p>其中值得一提的是run()方法，run（）方法当作普通方法的方式调用，程序还是要顺序执行，还是要等待run方法体执行完毕后才可继续执行下面的代码。而start()真正实现了多线程。</p>
-<p>run（）结果展示</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[线程1]正在启动！</span><br><span class="line">1---1</span><br><span class="line">1---2</span><br><span class="line">1---3</span><br><span class="line">[线程2]正在启动！</span><br><span class="line">2---1</span><br><span class="line">2---2</span><br><span class="line">2---3</span><br><span class="line">[线程3]正在启动！</span><br><span class="line">3---1</span><br><span class="line">3---2</span><br><span class="line">3---3</span><br><span class="line">[线程4]正在启动！</span><br><span class="line">4---1</span><br><span class="line">4---2</span><br><span class="line">4---3</span><br><span class="line">[线程5]正在启动！</span><br><span class="line">5---1</span><br><span class="line">5---2</span><br><span class="line">5---3</span><br></pre></td></tr></table></figure>
-
-<p>而start（）结果展示</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[线程1]正在启动！</span><br><span class="line">[线程2]正在启动！</span><br><span class="line">[线程3]正在启动！</span><br><span class="line">[线程4]正在启动！</span><br><span class="line">[线程5]正在启动！</span><br><span class="line">3---1</span><br><span class="line">5---1</span><br><span class="line">1---1</span><br><span class="line">1---2</span><br><span class="line">4---1</span><br><span class="line">4---2</span><br><span class="line">2---1</span><br><span class="line">2---2</span><br><span class="line">4---3</span><br><span class="line">1---3</span><br><span class="line">5---2</span><br><span class="line">3---2</span><br><span class="line">5---3</span><br><span class="line">2---3</span><br><span class="line">3---3</span><br></pre></td></tr></table></figure>
-
-
-
-<p>多次运行可以发现，每次的结果都基本不会相同，所以多线程的运行顺序是<strong>无序</strong>的，<strong>代码的运行结果与代码执行顺序或调用顺序是无关的</strong>，但可以通过<strong>join（）</strong>，<strong>线程池</strong>等方法来控制，后面再讲。</p>
-<h4 id="二-实现Runnable接口"><a href="#二-实现Runnable接口" class="headerlink" title="二.实现Runnable接口"></a>二.实现Runnable接口</h4><p>优势：1.相比第一种继承Thread类的方式，使用了面向接口，将任务与线程进行分离，有利于解耦</p>
-<p>​            2.可以继承其他类</p>
-<p>劣势：访问当前线程，则必须使用Thread.currentThread()方法</p>
-<p>Runbale相比Callable有以下的局限性</p>
-<ol>
-<li>任务没有返回值</li>
-<li>任务无法抛异常</li>
-</ol>
-<p>Mythread类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;=<span class="number">3</span>;i++)&#123;</span><br><span class="line">            System.out.println(Thread.currentThread().getName()+<span class="string">&quot;---&quot;</span>+i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Main方法</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span> ;i&lt;<span class="number">5</span>;i++)&#123;</span><br><span class="line">    MyThread myThread = <span class="keyword">new</span> MyThread();</span><br><span class="line">    Thread thread = <span class="keyword">new</span> Thread(myThread);  <span class="comment">//与继承Thread类不一样的地方</span></span><br><span class="line">    thread.setName(String.valueOf(i+<span class="number">1</span>));  <span class="comment">//给线程命名，也可以不自定义</span></span><br><span class="line">    System.out.println(<span class="string">&quot;[线程&quot;</span>+(i+<span class="number">1</span>)+<span class="string">&quot;]正在启动！&quot;</span>);</span><br><span class="line">    <span class="comment">//thread.run();</span></span><br><span class="line">    thread.start();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>start（）结果</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[线程1]正在启动！</span><br><span class="line">[线程2]正在启动！</span><br><span class="line">[线程3]正在启动！</span><br><span class="line">[线程4]正在启动！</span><br><span class="line">[线程5]正在启动！</span><br><span class="line">5---1</span><br><span class="line">5---2</span><br><span class="line">5---3</span><br><span class="line">1---1</span><br><span class="line">2---1</span><br><span class="line">2---2</span><br><span class="line">3---1</span><br><span class="line">4---1</span><br><span class="line">3---2</span><br><span class="line">2---3</span><br><span class="line">1---2</span><br><span class="line">3---3</span><br><span class="line">4---2</span><br><span class="line">1---3</span><br><span class="line">4---3</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="三-实现Callable接口（利用FutureTask执行任务，实现implements-Callable-lt-返回值类型-gt-）"><a href="#三-实现Callable接口（利用FutureTask执行任务，实现implements-Callable-lt-返回值类型-gt-）" class="headerlink" title="三.实现Callable接口（利用FutureTask执行任务，实现implements Callable&lt;返回值类型&gt;）"></a>三.实现Callable接口（利用FutureTask执行任务，实现implements Callable&lt;返回值类型&gt;）</h4><p>劣势：访问当前线程，则必须使用Thread.currentThread()方法</p>
-<h6 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h6><p>（1）创建Callable接口的实现类，并实现call()方法，该call()方法将作为线程执行体，并且有返回值。</p>
-<p>（2）创建Callable实现类的实例，使用FutureTask类来包装Callable对象，该FutureTask对象封装了该Callable对象的call()方法的返回值。</p>
-<p>（3）使用FutureTask对象作为Thread对象的target创建并启动新线程。</p>
-<p>（4）调用FutureTask对象的get()方法来获得子线程执行结束后的返回值</p>
-<p>MyThread类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.concurrent.Callable;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">implements</span> <span class="title">Callable</span>&lt;<span class="title">String</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//Callable接口内部实现call（）方法，相当于前面的run（）方法</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;=<span class="number">3</span>;i++)&#123;</span><br><span class="line">            System.out.println(Thread.currentThread().getName()+<span class="string">&quot;---&quot;</span>+i);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> Thread.currentThread().getName() + <span class="string">&quot;运行成功&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>Main方法</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span> ;i&lt;<span class="number">5</span>;i++)&#123;</span><br><span class="line">    MyThread myThread = <span class="keyword">new</span> MyThread();</span><br><span class="line">    FutureTask&lt;String&gt; task = <span class="keyword">new</span> FutureTask&lt;&gt;(myThread);   <span class="comment">//与继承Thread类不一样的地方</span></span><br><span class="line">    Thread thread = <span class="keyword">new</span> Thread(task);  <span class="comment">//以task对象作为target</span></span><br><span class="line">    System.out.println(<span class="string">&quot;开始&quot;</span>);</span><br><span class="line">    thread.start();</span><br><span class="line">    System.out.println(<span class="string">&quot;执行结果为&quot;</span>+task.get());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>结果</p>
-<p>由于FutureTask要等执行完才能get到执行结果，因此由于System.out.println(“执行结果为”+task.get());的存在，</p>
-<p>结果如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">开始</span><br><span class="line">Thread-1---1</span><br><span class="line">Thread-1---2</span><br><span class="line">Thread-1---3</span><br><span class="line">执行结果为Thread-1运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-2---1</span><br><span class="line">Thread-2---2</span><br><span class="line">Thread-2---3</span><br><span class="line">执行结果为Thread-2运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-3---1</span><br><span class="line">Thread-3---2</span><br><span class="line">Thread-3---3</span><br><span class="line">执行结果为Thread-3运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-4---1</span><br><span class="line">Thread-4---2</span><br><span class="line">Thread-4---3</span><br><span class="line">执行结果为Thread-4运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-5---1</span><br><span class="line">Thread-5---2</span><br><span class="line">Thread-5---3</span><br><span class="line">执行结果为Thread-5运行成功</span><br></pre></td></tr></table></figure>
-
-
-
-<p>去掉System.out.println(“执行结果为”+task.get())的结果</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">Thread-3---1</span><br><span class="line">Thread-1---1</span><br><span class="line">Thread-5---1</span><br><span class="line">Thread-2---1</span><br><span class="line">Thread-4---1</span><br><span class="line">Thread-2---2</span><br><span class="line">Thread-2---3</span><br><span class="line">Thread-5---2</span><br><span class="line">Thread-5---3</span><br><span class="line">Thread-1---2</span><br><span class="line">Thread-3---2</span><br><span class="line">Thread-1---3</span><br><span class="line">Thread-4---2</span><br><span class="line">Thread-3---3</span><br><span class="line">Thread-4---3</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="内部匿名类实现"><a href="#内部匿名类实现" class="headerlink" title="内部匿名类实现"></a>内部匿名类实现</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 启动继承Thread匿名内部类的任务</span></span><br><span class="line">Thread thread = <span class="keyword">new</span> Thread()&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    log.info(<span class="string">&quot;我是Thread匿名内部类实现&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  用Runnable实现比较常用</span></span><br><span class="line"><span class="comment">//  启动实现Runnable匿名实现类的任务</span></span><br><span class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;Runnable匿名内部类实现&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).start();</span><br><span class="line"></span><br><span class="line"><span class="comment">//  启动实现Runnable的lambda简化后的任务</span></span><br><span class="line"><span class="keyword">new</span> Thread(() -&gt; log.info(<span class="string">&quot;Runnable的lambda简化后的实现&quot;</span>)).start();</span><br></pre></td></tr></table></figure>
-
-<p><strong>其中对于log日志，如果不想每次都写private final Logger logger = LoggerFactory.getLogger(当前类名.class); 可以用Lombok插件的注解@Slf4j，对这两种创建模式的优劣，这里不做论述。</strong></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E5%88%9B%E5%BB%BA%EF%BC%88%E7%AF%87%E4%B8%80%EF%BC%89/" data-id="cko6zj6yu0000rj9i828jc620" data-title="Java多线程 线程创建（篇一）" class="article-share-link">分享</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -825,7 +831,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
     </div>
   </div>
 
@@ -835,7 +841,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 15px;">Java工具类</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 15px;">python</a>
+      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 15px;">Java工具类</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 15px;">python</a>
     </div>
   </div>
 
@@ -857,6 +863,10 @@
       <ul>
         
           <li>
+            <a href="/2021/05/04/Redis2/">Redission</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/">无锁cas（篇八）</a>
           </li>
         
@@ -870,10 +880,6 @@
         
           <li>
             <a href="/2021/05/03/%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/">可重入锁 （篇五）</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1/">线程通信 （篇四）</a>
           </li>
         
       </ul>
