@@ -77,6 +77,65 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-无锁cas(八)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/" class="article-date">
+  <time class="dt-published" datetime="2021-05-04T06:50:23.000Z" itemprop="datePublished">2021-05-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/">无锁cas（篇八）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="Java多线程-第八篇-无锁cas"><a href="#Java多线程-第八篇-无锁cas" class="headerlink" title="Java多线程 第八篇 无锁cas"></a>Java多线程 第八篇 无锁cas</h2><p>对于并发控制而言，锁是一种悲观策略，会阻塞线程执行。而无锁是一种乐观策略，它会假设对资源的访问时没有冲突的，既然没有冲突就不需要等待，线程不需要阻塞。那多个线程共同访问临界区的资源怎么办呢，无锁的策略采用一种比较交换技术<strong>CAS（compare and swap）</strong>来鉴别线程冲突，一旦检测到冲突，就重复当前操作直到没有冲突为止。</p>
+<h3 id="CAS无锁实现原理"><a href="#CAS无锁实现原理" class="headerlink" title="CAS无锁实现原理"></a>CAS无锁实现原理</h3><h5 id="CAS算法"><a href="#CAS算法" class="headerlink" title="CAS算法"></a>CAS算法</h5><p>一个CAS方法包含三个参数CAS(V,E,N)。V表示要更新的变量，E表示预期的值，N表示新值。只有当V的值等于E时，才会将V的值修改为N。如果V的值不等于E，说明已经被其他线程修改了，当前线程可以放弃此操作，也可以再次尝试次操作直至修改成功。基于这样的算法，CAS操作即使没有锁，也可以发现其他线程对当前线程的干扰（临界区值的修改），并进行恰当的处理。其中当前线程可以发现其他线程对临界区数据的修改，这点可以使用 volatile 进行保证,volatile 实现了JMM中的<strong>可见性</strong>。使得对临界区资源的修改可以马上被其他线程看到，它是通过添加内存屏障实现的。</p>
+<h5 id="juc并发包下包含了实现了cas的原子类"><a href="#juc并发包下包含了实现了cas的原子类" class="headerlink" title="juc并发包下包含了实现了cas的原子类"></a>juc并发包下包含了实现了cas的原子类</h5><p>1.AtomicInteger/AtomicBoolean/AtomicLong<br>2.AtomicIntegerArray/AtomicLongArray/AtomicReferenceArray<br>3.AtomicReference/AtomicStampedReference/AtomicMarkableReference</p>
+<h5 id="最常用AtomicInteger"><a href="#最常用AtomicInteger" class="headerlink" title="最常用AtomicInteger"></a>最常用AtomicInteger</h5><p>源码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> value;</span><br><span class="line"></span><br><span class="line"><span class="comment">//此处省略一万字代码</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Atomically sets to the given value and returns the old value.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> newValue the new value</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the previous value</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getAndSet</span><span class="params">(<span class="keyword">int</span> newValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">int</span> current = get();</span><br><span class="line">        <span class="keyword">if</span> (compareAndSet(current, newValue))</span><br><span class="line">            <span class="keyword">return</span> current;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Atomically sets the value to the given updated value</span></span><br><span class="line"><span class="comment"> * if the current value &#123;<span class="doctag">@code</span> ==&#125; the expected value.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> expect the expected value</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> update the new value</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> true if successful. False return indicates that</span></span><br><span class="line"><span class="comment"> * the actual value was not equal to the expected value.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">compareAndSet</span><span class="params">(<span class="keyword">int</span> expect, <span class="keyword">int</span> update)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> unsafe.compareAndSwapInt(<span class="keyword">this</span>, valueOffset, expect, update);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>AtomicInteger中真正存储数据的是value变量，而改变量是被<strong>volatile</strong>修饰的，保证了线程直接的可见性。还记得Integer中的value吗？Integer中的value是被final修饰的，是不可变对象。<br>getAndSet方法通过一个死循环不断尝试赋值操作。而真正的赋值操作交给了<strong>unsafe类</strong>来实现。</p>
+<h5 id="unsafe"><a href="#unsafe" class="headerlink" title="unsafe"></a>unsafe</h5><p><em><strong>Unsafe</strong></em>类是CAS实现的核心</p>
+<p>构造方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Unsafe <span class="title">getUnsafe</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Class var0 = Reflection.getCallerClass();</span><br><span class="line">    <span class="keyword">if</span>(var0.getClassLoader() != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">&quot;Unsafe&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> theUnsafe;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实这里<code>Unsafe</code>封装了一些类似于<strong>C++中指针</strong>的东西，该类中的方法都是<code>native</code>的，而且是<strong>原子</strong>的操作。原子性是通过CAS原子指令实现的，由处理器保证。</p>
+<h3 id="CAS问题"><a href="#CAS问题" class="headerlink" title="CAS问题"></a>CAS问题</h3><p>1.<strong>ABA问题</strong></p>
+<p>ABA：一个线程将某一内存地址中的数值A改成了B，接着又改成了A，此时CAS认为是没有变化，其实是已经变化过了，而这个问题的解决方案可以使用版本号标识，每操作一次version加1。在java5中，已经提供了AtomicStampedReference来解决问题。</p>
+<p>2.<strong>CAS造成CPU利用率增加</strong></p>
+<p>3.<strong>会增加程序测试的复杂度</strong></p>
+<p>4.<strong>只能保证一个共享变量的原子操作</strong></p>
+<h3 id="jdk中的CAS实现"><a href="#jdk中的CAS实现" class="headerlink" title="jdk中的CAS实现"></a>jdk中的CAS实现</h3><h5 id="java-util-concurrent-atomic包"><a href="#java-util-concurrent-atomic包" class="headerlink" title="java.util.concurrent.atomic包"></a>java.util.concurrent.atomic包</h5>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/" data-id="cko9mlwvo0000889i3p1z7zrk" data-title="无锁cas（篇八）" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-JMM及volatile关键字" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/" class="article-date">
@@ -554,7 +613,7 @@
       
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jet/" rel="tag">jet</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li></ul>
 
     </footer>
   </div>
@@ -748,53 +807,6 @@
 
 
   
-    <article id="post-pytoqr" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/04/25/pytoqr/" class="article-date">
-  <time class="dt-published" datetime="2021-04-25T04:34:43.000Z" itemprop="datePublished">2021-04-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/25/pytoqr/">利用python定制个性化二维码</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="利用python定制个性化二维码"><a href="#利用python定制个性化二维码" class="headerlink" title="利用python定制个性化二维码"></a>利用python定制个性化二维码</h2><p>其中获取自己QQ或者微信加好友的链接地址，可以先保存自己QQ或微信自带的二维码，然后去解码。</p>
-<p>我用的是 <a target="_blank" rel="noopener" href="https://cli.im/deqr%EF%BC%88%E8%8D%89%E6%96%99%E4%BA%8C%E7%BB%B4%E7%A0%81%E8%A7%A3%E7%A0%81%EF%BC%89">https://cli.im/deqr（草料二维码解码）</a></p>
-<p>因为代码上都加了注释，就直接附上代码了</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> MyQR <span class="keyword">import</span> myqr</span><br><span class="line">myqr.run(</span><br><span class="line">    words=<span class="string">&#x27;https://u.wechat.com/MJmwiSDxbQLsETk7dzgcPH0&#x27;</span>,</span><br><span class="line">    <span class="comment"># 扫描二维码后，显示的内容，或是跳转的链接</span></span><br><span class="line">    version=<span class="number">5</span>,  <span class="comment"># 设置容错率</span></span><br><span class="line">    level=<span class="string">&#x27;H&#x27;</span>,  <span class="comment"># 控制纠错水平，范围是L、M、Q、H，从左到右依次升高</span></span><br><span class="line">    picture=<span class="string">&#x27;pi.gif&#x27;</span>,  <span class="comment"># 图片所在目录，可以是动图</span></span><br><span class="line">    colorized=<span class="literal">True</span>,  <span class="comment"># 黑白(False)还是彩色(True)</span></span><br><span class="line">    contrast=<span class="number">1.0</span>,  <span class="comment"># 用以调节图片的对比度，1.0 表示原始图片。默认为1.0。</span></span><br><span class="line">    brightness=<span class="number">1.0</span>,  <span class="comment"># 用来调节图片的亮度，用法同上。</span></span><br><span class="line">    save_name=<span class="string">&#x27;my_weixin.gif&#x27;</span>,  <span class="comment"># 控制输出文件名，格式可以是 .jpg， .png ，.bmp ，.gif</span></span><br><span class="line">    )</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h4 id="我选用的背景图"><a href="#我选用的背景图" class="headerlink" title="我选用的背景图"></a>我选用的背景图</h4><img src="/2021/04/25/pytoqr/pi.gif" width="50%" height="50%">
-
-<h5 id="最终效果（我的微信）"><a href="#最终效果（我的微信）" class="headerlink" title="最终效果（我的微信）"></a>最终效果（我的微信）</h5><img src="/2021/04/25/pytoqr/my_weixin.gif" width="50%" height="50%">
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/04/25/pytoqr/" data-id="cko6zj6z50008rj9igiwo5u2i" data-title="利用python定制个性化二维码" class="article-share-link">分享</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -813,7 +825,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jet/" rel="tag">jet</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
     </div>
   </div>
 
@@ -823,7 +835,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 15px;">Java工具类</a> <a href="/tags/jet/" style="font-size: 10px;">jet</a> <a href="/tags/python/" style="font-size: 15px;">python</a>
+      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 15px;">Java工具类</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 15px;">python</a>
     </div>
   </div>
 
@@ -845,6 +857,10 @@
       <ul>
         
           <li>
+            <a href="/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/">无锁cas（篇八）</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/">JMM及volatile关键字 （篇七）</a>
           </li>
         
@@ -858,10 +874,6 @@
         
           <li>
             <a href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1/">线程通信 （篇四）</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8/">线程安全 （篇三）</a>
           </li>
         
       </ul>
