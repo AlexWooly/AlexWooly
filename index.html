@@ -139,15 +139,14 @@
 
 <ol start="7">
 <li><p>JOIN</p>
-<ul>
-<li><p>　　left join :左连接，返回左表中所有的记录以及右表中连接字段相等的记录。</p>
+<p>​        left join :左连接，返回左表中所有的记录以及右表中连接字段相等的记录。</p>
 <p>　　right join :右连接，返回右表中所有的记录以及左表中连接字段相等的记录。</p>
 <p>　　inner join: 内连接，又叫等值连接，只返回两个表中连接字段相等的行。</p>
 <p>　　full join:外连接，返回两个表中的行：left join + right join。</p>
-</li>
-<li><p>```sql<br>SELECT Persons.LastName, Persons.FirstName, Orders.OrderNo<br>FROM Persons<br>INNER JOIN Orders<br>ON Persons.Id_P = Orders.Id_P<br>ORDER BY Persons.LastName</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">8. UNION 操作符用于合并两个或多个 SELECT 语句的结果集</span><br><span class="line"></span><br><span class="line">   &#96;&#96;&#96;sql</span><br><span class="line">   SELECT column_name(s) FROM table_name1</span><br><span class="line">   UNION</span><br><span class="line">   SELECT column_name(s) FROM table_name2</span><br></pre></td></tr></table></figure></li>
-</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> Persons.LastName, Persons.FirstName, Orders.OrderNo</span><br><span class="line"><span class="keyword">FROM</span> Persons</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> Orders</span><br><span class="line"><span class="keyword">ON</span> Persons.Id_P <span class="operator">=</span> Orders.Id_P</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> Persons.LastName</span><br></pre></td></tr></table></figure></li>
+<li><p>UNION 操作符用于合并两个或多个 SELECT 语句的结果集</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> column_name(s) <span class="keyword">FROM</span> table_name1</span><br><span class="line"><span class="keyword">UNION</span></span><br><span class="line"><span class="keyword">SELECT</span> column_name(s) <span class="keyword">FROM</span> table_name2</span><br></pre></td></tr></table></figure>
+
 <p>默认地，UNION 操作符选取不同的值。如果允许重复的值，使用 UNION ALL</p>
 </li>
 <li><p>SELECT INTO 语句从一个表中选取数据，然后把数据插入另一个表中。</p>
