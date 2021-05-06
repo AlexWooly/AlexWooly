@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Redis 事务 | AlexWoo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Redis 第三篇 Redis 事务回到很多人抢购库存剩余为1的场景，抢购的时候是一个并发操作，系统发来多个并发请求。这批请求有的执行略慢，查询到库存为 0 于是购买失败；但有的请求执行较快，查询到数据库商品余量都是 1 个，然后都通过这一个余量判断，然后导致超发的情况。前面我们通过锁来解决。  线程执行先后顺序和快慢，都是由操作系统、CPU 自动决定的，开发者无法预测  介绍事务(Transac">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 事务">
+<meta property="og:url" content="https://alexwooly.gitee.io/2021/05/05/Redis3/index.html">
+<meta property="og:site_name" content="AlexWoo">
+<meta property="og:description" content="Redis 第三篇 Redis 事务回到很多人抢购库存剩余为1的场景，抢购的时候是一个并发操作，系统发来多个并发请求。这批请求有的执行略慢，查询到库存为 0 于是购买失败；但有的请求执行较快，查询到数据库商品余量都是 1 个，然后都通过这一个余量判断，然后导致超发的情况。前面我们通过锁来解决。  线程执行先后顺序和快慢，都是由操作系统、CPU 自动决定的，开发者无法预测  介绍事务(Transac">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alexwooly.gitee.io/2021/05/05/Redis3/Redis3-1.png">
+<meta property="article:published_time" content="2021-05-05T15:18:15.000Z">
+<meta property="article:modified_time" content="2021-05-06T06:55:15.769Z">
+<meta property="article:author" content="AlexWoo">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://alexwooly.gitee.io/2021/05/05/Redis3/Redis3-1.png">
+  
+    <link rel="alternate" href="/atom.xml" title="AlexWoo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">AlexWoo</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">王凌奕的个人博客</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://alexwooly.gitee.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Redis3" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/05/Redis3/" class="article-date">
+  <time class="dt-published" datetime="2021-05-05T15:18:15.000Z" itemprop="datePublished">2021-05-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Redis 事务
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="Redis-第三篇-Redis-事务"><a href="#Redis-第三篇-Redis-事务" class="headerlink" title="Redis 第三篇 Redis 事务"></a>Redis 第三篇 Redis 事务</h1><p>回到很多人抢购库存剩余为1的场景，抢购的时候是一个并发操作，系统发来多个并发请求。这批请求有的执行略慢，查询到库存为 0 于是购买失败；但有的请求执行较快，查询到数据库商品余量都是 1 个，然后都通过这一个余量判断，然后导致超发的情况。前面我们通过锁来解决。</p>
+<blockquote>
+<p>线程执行先后顺序和快慢，都是由操作系统、CPU 自动决定的，开发者无法预测</p>
+</blockquote>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>事务(Transaction) ，是指将一个业务逻辑作为一个整体一起执行。事务其实就是打包一组操作（或者命令）作为一个整体，在事务处理时将顺序执行这些操作，并返回结果，如果其中任何一个环节出错，所有的操作将被回滚。</p>
+<p>redis 的事务指的是提供一种将多个命令打包，一次性按顺序地执行</p>
+<p>redis 的事务可以保证只有在执行完事务中的所有命令后，才会继续处理此客户端的其他命令。也就是说只有一个用户可以操作事务当中的数据</p>
+<h2 id="Redis-事务从开始到结束的三个过程"><a href="#Redis-事务从开始到结束的三个过程" class="headerlink" title="Redis 事务从开始到结束的三个过程"></a>Redis 事务从开始到结束的三个过程</h2><p><strong>开启事务 -&gt; 命令入列 -&gt;执行事务/放弃事务</strong></p>
+<h3 id="开启事务"><a href="#开启事务" class="headerlink" title="开启事务"></a>开启事务</h3><p>四大指令：MULTI、EXEC、DISCARD、WATCH</p>
+<p><strong>MULTI</strong>：开启一个事物</p>
+<p><strong>EXEC</strong>：执行一个事物</p>
+<p><strong>DISCARD</strong>：取消一个事物</p>
+<p><strong>WATCH</strong>：用于客户端并发情况下，为事务提供一个锁（CAS，Check And Set）可以用 watch 命令来监控一个或多个变量如果在执行事务之前，某个监控项被修改了，那么整个事务就会终止执行（必须写在事务的前面，不能写在事务当中）</p>
+<h3 id="对Redis-数据初始化的说明"><a href="#对Redis-数据初始化的说明" class="headerlink" title="对Redis 数据初始化的说明"></a>对Redis 数据初始化的说明</h3><p>既然 Redis 是缓存，就要考虑到什么时机把初始数据存入到数据库。下演示代码只是一种最简单的情况，抢购前从数据库里查库存，然后放入 Redis。实际上也可以在项目启动时初始化，在标记为 @PostConstruct 的方法中把输入存入 Redis。</p>
+<h3 id="执行事务"><a href="#执行事务" class="headerlink" title="执行事务"></a>执行事务</h3><p>一般为固定写法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redisTemplate.execute(<span class="keyword">new</span> SessionCallback&lt;List&lt;Object&gt;&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">execute</span><span class="params">(RedisOperations operations)</span> <span class="keyword">throws</span> DataAccessException </span>&#123;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure>
+
+<p>图示理解</p>
+<img src="/2021/05/05/Redis3/Redis3-1.png" width="60%" height="60%">
+
+<h3 id="模拟抢购实例代码（Redis事务版）"><a href="#模拟抢购实例代码（Redis事务版）" class="headerlink" title="模拟抢购实例代码（Redis事务版）"></a>模拟抢购实例代码（Redis事务版）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Result&lt;Boolean&gt; <span class="title">snappedUp</span><span class="params">(<span class="meta">@RequestParam(&quot;id&quot;)</span> Long id)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//初始化返回数据</span></span><br><span class="line">        Result result = <span class="keyword">new</span> Result();</span><br><span class="line">        result.data(<span class="keyword">true</span>);</span><br><span class="line">        result.setSuccess(<span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">//实现购买代码</span></span><br><span class="line">        <span class="comment">//先去redis查询一下</span></span><br><span class="line">        Object value = redisTemplate.opsForValue().get(id);</span><br><span class="line">        <span class="keyword">int</span> stock = <span class="number">0</span>;</span><br><span class="line">        <span class="comment">//如果redis没有则去数据库查询</span></span><br><span class="line">        <span class="keyword">if</span> (value == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">//去数据库查询该商品的信息</span></span><br><span class="line">            ProductDO product = productDAO.selectById(id);</span><br><span class="line">            <span class="comment">//将信息缓存到redis里边</span></span><br><span class="line">            stock = product.getStock();</span><br><span class="line">            redisTemplate.opsForValue().set(product.getId(), stock);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            stock = (<span class="keyword">int</span>)value;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        redisTemplate.execute(<span class="keyword">new</span> SessionCallback&lt;List&lt;Object&gt;&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">execute</span><span class="params">(RedisOperations operations)</span> <span class="keyword">throws</span> DataAccessException </span>&#123;</span><br><span class="line">                Integer stock = (Integer)operations.opsForValue().get(id);</span><br><span class="line">                <span class="comment">//判断该商品的库存是否大于1</span></span><br><span class="line">                <span class="keyword">if</span> (Integer.valueOf(stock) &gt;= <span class="number">1</span>) &#123;</span><br><span class="line">                    <span class="comment">//监听商品的名字，redis里边的key  注意！！！！监听的不是stock而是商品id</span></span><br><span class="line">                    operations.watch(id);</span><br><span class="line"></span><br><span class="line">                    <span class="comment">//开启事务</span></span><br><span class="line">                    operations.multi();</span><br><span class="line"></span><br><span class="line">                    <span class="comment">//将该商品的库存自减1</span></span><br><span class="line">                    operations.opsForValue().set(id, stock - <span class="number">1</span>);</span><br><span class="line">                    <span class="comment">//修改mysql数据库库存数量</span></span><br><span class="line">                    ProductDO productDO = <span class="keyword">new</span> ProductDO();</span><br><span class="line">                    productDO.setId(id);</span><br><span class="line">                    productDO.setStock(stock - <span class="number">1</span>);</span><br><span class="line">                    productDAO.updateStock(productDO);</span><br><span class="line">                    <span class="comment">// 执行事务</span></span><br><span class="line">                    List exec = operations.exec();</span><br><span class="line">                    <span class="keyword">if</span> (exec.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                        <span class="comment">// <span class="doctag">TODO:</span>可以有其它业务逻辑，例如插入订单等，视具体需求而定</span></span><br><span class="line">                        result.setMessage(<span class="string">&quot;抢购成功&quot;</span>);</span><br><span class="line">                        result.setData(<span class="keyword">true</span>);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        result.setMessage(<span class="string">&quot;抢购失败&quot;</span>);</span><br><span class="line">                        result.setData(<span class="keyword">false</span>);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> exec;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    result.setMessage(<span class="string">&quot;商品库存不足&quot;</span>);</span><br><span class="line">                    result.setData(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/05/Redis3/" data-id="ckocjcpjg0000r29i4p4y5eki" data-title="Redis 事务" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/05/04/Redis2/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">Redission</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/05/05/Redis3/">Redis 事务</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/04/Redis2/">Redission</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/">无锁cas（篇八）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/">JMM及volatile关键字 （篇七）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/03/%E6%AD%BB%E9%94%81/">死锁 （篇六）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2021 AlexWoo<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
