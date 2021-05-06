@@ -77,6 +77,111 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Redis" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/02/Redis/" class="article-date">
+  <time class="dt-published" datetime="2021-05-02T08:17:44.000Z" itemprop="datePublished">2021-05-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/02/Redis/">Redis 开搞！</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="Redis-第一篇-介绍，安装，Spring集成"><a href="#Redis-第一篇-介绍，安装，Spring集成" class="headerlink" title="Redis 第一篇 介绍，安装，Spring集成"></a>Redis 第一篇 介绍，安装，Spring集成</h2><p>新数据裤的爆发结束了关系型数据库的统治地位（如Mysql等，虽然结束了统治地位，但使用频率和影响力依旧高居前位），新兴的数据库在NoSQL（非关系型数据库）的大旗下各显神通（衍生了非常多的派别，Redis，MongoDB，图谱型数据库-neo4j等等等等），以键值对，嵌套文档，甚至关系图谱来存储数据。</p>
+<blockquote>
+<p>NoSQL 它是”Not Only SQL”的缩写指的是非关系型数据库，而我们常用的都是关系型数据库。就像我们常用的 mysql，sqlserver 一样，这些数据库一般用来存储重要信息，应对普通的业务是没有问题的。随着互联网的高速发展，传统的关系型数据库在应付超大规模，超大流量以及高并发的时候力不从心,这就需要使用到像 Redis 这样的 NoSQL 数据库。</p>
+</blockquote>
+<p>本系列记录了NoSQL中的佼佼者–<strong>Redis</strong></p>
+<h3 id="Redis的优点"><a href="#Redis的优点" class="headerlink" title="Redis的优点"></a>Redis的优点</h3><p>**1.基于内存运行,性能高效 **</p>
+<p><strong>2.支持分布式，理论上可以无限扩展</strong></p>
+<p><strong>3.丰富的数据类型</strong>         Redis 支持 Strings, Lists, Hashes, Sets 及 Ordered Sets 等数据类型操作</p>
+<h3 id="Redis安装"><a href="#Redis安装" class="headerlink" title="Redis安装"></a>Redis安装</h3><p>云服务器安装，我用的是阿里云，其他云服务器操作不便，Redis也能安装到本地</p>
+<h5 id="1-安装Docker"><a href="#1-安装Docker" class="headerlink" title="1.安装Docker"></a>1.安装Docker</h5><p><strong>Docker</strong> ：一个开源的应用容器引擎，基于 <a target="_blank" rel="noopener" href="https://www.runoob.com/go/go-tutorial.html">Go 语言</a> 并遵从 Apache2.0 协议开源。</p>
+<p>Docker 可以让开发者打包他们的应用以及依赖包到一个轻量级、可移植的容器中，然后发布到任何流行的 Linux 机器上，也可以实现虚拟化。</p>
+<p>Docker作为近年来最火的虚拟化技术之一，有很多强大的功能和作用，这里不深入讲解（主要我自己也没了解太深），这边简单来说就是利用Docker这个<strong>便携应用容器</strong>进行Redis安装。</p>
+<p>docker 一键运行MySQL数据库：<strong>docker run -d -p 3306:3306 tutum/mysql</strong></p>
+<p><strong>登陆云服务器后，依此输入下面的命令，回车执行</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo yum -y update</span><br><span class="line">sudo yum -y install epel-release</span><br><span class="line">sudo yum -y install docker-io</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="2-安装Redis"><a href="#2-安装Redis" class="headerlink" title="2.安装Redis"></a>2.安装Redis</h5><p><strong>先启动Docker</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl start docker</span><br><span class="line">sudo docker version</span><br></pre></td></tr></table></figure>
+
+<p><strong>安装Redis并启动</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo docker pull redis:latest</span><br><span class="line">sudo docker images</span><br><span class="line">sudo docker run  --name redis -p 6379:6379 -d --restart&#x3D;always redis:latest redis-server --appendonly yes --requirepass &quot;输入自己的服务器密码&quot;</span><br></pre></td></tr></table></figure>
+
+<p><strong>验证是否启动成功</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker ps</span><br></pre></td></tr></table></figure>
+
+<p><strong>端口号开启</strong></p>
+<p>阿里云服务器上手动开启<strong>6379</strong>端号</p>
+<h3 id="Spring集成Redis"><a href="#Spring集成Redis" class="headerlink" title="Spring集成Redis"></a>Spring集成Redis</h3><p><strong>Redis 客户端</strong>：所谓客户端，有时也叫开发包，因为SpringBoot 项目实际上是通过网络来使用和操作 Redis（Mysql也是网络远程调用），如果没有客户端，使用起来会很复杂，客户端的主要作用是为了更好的使用 Redis，提供了一整套操作接口或操作工具类。</p>
+<h4 id="常见三种客户端"><a href="#常见三种客户端" class="headerlink" title="常见三种客户端"></a><strong>常见三种客户端</strong></h4><ol>
+<li><p>Lettuce 客户端</p>
+<p>Spring Boot 2.0 之后默认集成的，高级 Redis 客户端，用于线程安全同步，异步和响应使用，支持集群。它的优势是支持同步、异步和响应式模式，多个线程可以共享一个连接实例，而不必担心多线程并发问题。</p>
+</li>
+<li><p>Jedis 客户端</p>
+<p>是老牌的 Redis 的 Java 实现客户端，提供了比较全面的 Redis 命令的支持，Spring Boot 2.0 之前默认使用的，现在已不推荐使用。</p>
+</li>
+<li><p>Redission 客户端(我用的比较多)</p>
+<p>实现了分布式和可扩展的 Java 数据结构。它的优势提供很多分布式相关操作服务。</p>
+</li>
+</ol>
+<h4 id="springboot集成"><a href="#springboot集成" class="headerlink" title="springboot集成"></a>springboot集成</h4><h5 id="一-引入依赖"><a href="#一-引入依赖" class="headerlink" title="一.引入依赖"></a>一.引入依赖</h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-data-redis<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="二-application-properties配置-Redis-服务器相关配置"><a href="#二-application-properties配置-Redis-服务器相关配置" class="headerlink" title="二.application.properties配置 Redis 服务器相关配置"></a>二.application.properties配置 Redis 服务器相关配置</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Redis服务器地址</span><br><span class="line">spring.redis.host= <span class="number">123.45</span><span class="number">.656</span><span class="number">.218</span></span><br><span class="line"># Redis 服务器端口号</span><br><span class="line">spring.redis.port= <span class="number">6379</span></span><br><span class="line"># Redis 服务器密码 （请换成自己机器密码）</span><br><span class="line">spring.redis.password=</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="三-启动应用"><a href="#三-启动应用" class="headerlink" title="三.启动应用"></a>三.启动应用</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.StringRedisTemplate</span><br><span class="line"></span><br><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoController</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> StringRedisTemplate stringRedisTemplate;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/02/Redis/" data-id="ckoa6j9nd0000669idruw2zer" data-title="Redis 开搞！" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-jwt微服务" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/26/jwt%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="article-date">
@@ -681,7 +786,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
     </div>
   </div>
 
@@ -691,7 +796,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a>
+      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a>
     </div>
   </div>
 
@@ -713,6 +818,10 @@
       <ul>
         
           <li>
+            <a href="/2021/05/06/%E5%B8%B8%E7%94%A8sql%EF%BC%88MySQL%EF%BC%89/">常用sql（MySQL）</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/05/Redis3/">Redis 事务</a>
           </li>
         
@@ -726,10 +835,6 @@
         
           <li>
             <a href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/">JMM及volatile关键字 （篇七）</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/03/%E6%AD%BB%E9%94%81/">死锁 （篇六）</a>
           </li>
         
       </ul>
