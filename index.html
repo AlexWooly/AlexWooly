@@ -77,6 +77,200 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-分布式架构理论" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/11/%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%90%86%E8%AE%BA/" class="article-date">
+  <time class="dt-published" datetime="2021-05-11T09:16:39.000Z" itemprop="datePublished">2021-05-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/11/%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%90%86%E8%AE%BA/">分布式架构理论</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="分布式架构理论"><a href="#分布式架构理论" class="headerlink" title="分布式架构理论"></a>分布式架构理论</h2><h3 id="CAP理论"><a href="#CAP理论" class="headerlink" title="CAP理论"></a>CAP理论</h3><p>CAP定理: 指的是在一个分布式系统中，Consistency（一致性）、 Availability（可用性）、Partition tolerance（分区容错性），三者不可同时获得</p>
+<ul>
+<li><p>一致性（C）：所有节点都可以访问到最新的数据</p>
+</li>
+<li><p>可用性（A）：每个请求都是可以得到响应的，不管请求是成功还是失败</p>
+</li>
+<li><p>分区容错性（P）：除了全部整体网络故障，其他故障都不能导致整个系统不可用</p>
+</li>
+<li><p>CAP理论就是说在分布式存储系统中，最多只能实现上面的两点。而由于当前的网络硬件肯定会出现延迟丢包等问题，所以分区容忍性是我们必须需要实现的。所以我们只能在一致性和可用性之间进行权衡</p>
+<img src="/2021/05/11/%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%90%86%E8%AE%BA/CAP1.png" width="40%" height="40%"></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CA： 如果不要求P（不允许分区），则C（强一致性）和A（可用性）是可以保证的。但放弃P的同时也就意味着放弃了系统的扩展性，也就是分布式节点受限，没办法部署子节点，这是违背分布式系统设计的初衷的</span><br><span class="line"></span><br><span class="line">CP: 如果不要求A（可用），每个请求都需要在服务器之间保持强一致，而P（分区）会导致同步时间无限延长(也就是等待数据同步完才能正常访问服务)，一旦发生网络故障或者消息丢失等情况，就要牺牲用户的体验，等待所有数据全部一致了之后再让用户访问系统</span><br><span class="line"></span><br><span class="line">AP：要高可用并允许分区，则需放弃一致性。一旦分区发生，节点之间可能会失去联系，为了高可用，每个节点只能用本地数据提供服务，而这样会导致全局数据的不一致性。</span><br></pre></td></tr></table></figure>
+
+<h3 id="注册中心的选择"><a href="#注册中心的选择" class="headerlink" title="注册中心的选择"></a>注册中心的选择</h3><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"><strong>Nacos</strong></th>
+<th align="left"><strong>Eureka</strong></th>
+<th align="left"><strong>Consul</strong></th>
+<th align="left"><strong>Zookeeper</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">一致性协议</td>
+<td align="left">CP+AP</td>
+<td align="left">AP</td>
+<td align="left">CP</td>
+<td align="left">CP</td>
+</tr>
+<tr>
+<td align="left">健康检查</td>
+<td align="left">TCP/HTTP/MYSQL/Client Beat</td>
+<td align="left">心跳</td>
+<td align="left">TCP/HTTP/gRPC/Cmd</td>
+<td align="left">Keep Alive</td>
+</tr>
+<tr>
+<td align="left">雪崩保护</td>
+<td align="left">有</td>
+<td align="left">有</td>
+<td align="left">无</td>
+<td align="left">无</td>
+</tr>
+<tr>
+<td align="left">访问协议</td>
+<td align="left">HTTP/DNS</td>
+<td align="left">HTTP</td>
+<td align="left">HTTP/DNS</td>
+<td align="left">TCP</td>
+</tr>
+<tr>
+<td align="left">SpringCloud集成</td>
+<td align="left">支持</td>
+<td align="left">支持</td>
+<td align="left">支持</td>
+<td align="left">支持</td>
+</tr>
+</tbody></table>
+<ul>
+<li>分布式系统中P,肯定要满足，所以只能在CA中二选一</li>
+<li>没有最好的选择，最好的选择是根据业务场景来进行架构设计</li>
+<li>如果要求一致性，则选择zookeeper/Nacos，如金融行业 CP</li>
+<li>如果要求可用性，则Eureka/Nacos，如电商系统 AP</li>
+<li>CP ： 适合支付、交易类，要求数据强一致性，宁可业务不可用，也不能出现脏数据</li>
+<li>AP: 互联网业务，比如信息流架构，不要求数据强一致，更想要服务可用</li>
+</ul>
+<h3 id="BASE理论"><a href="#BASE理论" class="headerlink" title="BASE理论"></a>BASE理论</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">由来自 ebay 的架构师提出:CAP 中的一致性和可用性进行一个权衡的结果，核心思想就是：我们无法做到强一致，但每个应用都可以根据自身的业务特点，采用适当的方式来使系统达到最终一致性</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>Basically Available(基本可用)</p>
+<ul>
+<li>假设系统，出现了不可预知的故障，但还是能用, 可能会有性能或者功能上的影响</li>
+</ul>
+</li>
+<li><p>Soft state（软状态）</p>
+<ul>
+<li>允许系统中的数据存在中间状态，并认为该状态不影响系统的整体可用性，即允许系统在多个不同节点的数据副本存在数据延时</li>
+</ul>
+</li>
+<li><p>Eventually consistent（最终一致性）</p>
+<ul>
+<li>系统能够保证在没有其他新的更新操作的情况下，数据最终一定能够达到一致的状态，因此所有客户端对系统的数据访问最终都能够获取到最新的值</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/11/%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%90%86%E8%AE%BA/" data-id="ckojts1g50001os9iekt4eqlj" data-title="分布式架构理论" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag">微服务</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Java基本数据结构及其操作" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/07/Java%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E6%93%8D%E4%BD%9C/" class="article-date">
+  <time class="dt-published" datetime="2021-05-07T11:07:38.000Z" itemprop="datePublished">2021-05-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/07/Java%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E6%93%8D%E4%BD%9C/">Java基本数据结构及其操作</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="一-数组"><a href="#一-数组" class="headerlink" title="一.数组"></a>一.数组</h2><p>最常见数据结构</p>
+<p>常用方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.Arrays;</span><br><span class="line"><span class="keyword">import</span> java.util.Collections;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">array</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span>[] a = &#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;;</span><br><span class="line">        <span class="keyword">int</span>[] b = <span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">3</span>];</span><br><span class="line"></span><br><span class="line">        System.out.println(Arrays.toString(a));</span><br><span class="line">        <span class="keyword">int</span> as = a.length;</span><br><span class="line">        <span class="keyword">int</span> a1 = a[<span class="number">1</span>];</span><br><span class="line">        Arrays.sort(a);</span><br><span class="line">        Integer[] c = &#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;;</span><br><span class="line">        Arrays.sort(c, (o1, o2) -&gt; o1 - o2);         <span class="comment">//升序</span></span><br><span class="line">        Arrays.sort(c, (o1,o2) -&gt; o2.compareTo(o1)); <span class="comment">//降序</span></span><br><span class="line"></span><br><span class="line">        ArrayList&lt;Integer&gt; arr = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        System.out.println(arr.toString());</span><br><span class="line">        arr.add(<span class="number">1</span>,<span class="number">1</span>);</span><br><span class="line">        arr.add(<span class="number">2</span>);</span><br><span class="line">        arr.remove(<span class="number">0</span>);  <span class="comment">//索引或元素本身</span></span><br><span class="line">        arr.set(<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">int</span> arrs = arr.size();</span><br><span class="line">        <span class="keyword">boolean</span> is2 = arr.contains(<span class="number">2</span>);</span><br><span class="line">        Collections.sort(arr);</span><br><span class="line">        Collections.sort(arr,Collections.reverseOrder());</span><br><span class="line">        arr.sort(Collections.reverseOrder());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="二-链表"><a href="#二-链表" class="headerlink" title="二.链表"></a>二.链表</h2><p>离散存储线性结构</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.LinkedList;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Linkedlist</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        LinkedList&lt;Integer&gt; list = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        list.add(<span class="number">1</span>);</span><br><span class="line">        list.add(<span class="number">2</span>);</span><br><span class="line">        list.add(<span class="number">3</span>);</span><br><span class="line">        System.out.println(list.toString());</span><br><span class="line">        list.add(<span class="number">2</span>,<span class="number">10</span>);</span><br><span class="line">        <span class="keyword">int</span> element = list.get(<span class="number">2</span>);</span><br><span class="line">        <span class="keyword">int</span> index = list.indexOf(<span class="number">10</span>);</span><br><span class="line">        list.set(<span class="number">2</span>,<span class="number">11</span>);</span><br><span class="line">        list.remove(<span class="number">2</span>);  <span class="comment">//索引</span></span><br><span class="line">        <span class="keyword">int</span> length = list.size();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>leetcode常用自定义链表对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ListNode</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> val;</span><br><span class="line">        ListNode next = <span class="keyword">null</span>;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">ListNode</span><span class="params">(<span class="keyword">int</span> val)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.val = val;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>leetcode的第19题记录ListNode的使用</p>
+<p>给你一个链表，删除链表的倒数第 <code>n</code> 个结点，并且返回链表的头结点</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> ListNode <span class="title">removeNthFromEnd</span><span class="params">(ListNode head, <span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">        ListNode ans=<span class="keyword">new</span> ListNode(<span class="number">0</span>);<span class="comment">//定义一个头节点</span></span><br><span class="line">        ans.next=head;<span class="comment">//头节点指向这个链表</span></span><br><span class="line">        ListNode listnode = ans;<span class="comment">//每次调用这个链表只需要定义一个节点等于这个头节点</span></span><br><span class="line">        <span class="keyword">int</span> length=<span class="number">0</span>;</span><br><span class="line">        <span class="keyword">while</span>(listnode.next!=<span class="keyword">null</span>)&#123;<span class="comment">//统计链表长度</span></span><br><span class="line">            length++;</span><br><span class="line">            listnode=listnode.next;</span><br><span class="line">        &#125;</span><br><span class="line">        ListNode temp =ans;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>;i&lt;length-n+<span class="number">1</span>;i++)&#123;</span><br><span class="line">            temp=temp.next;</span><br><span class="line">        &#125;</span><br><span class="line">        temp.next=temp.next.next;<span class="comment">//在倒数第n个位置前使链表的当前节点指向n的下一个位置</span></span><br><span class="line">        <span class="keyword">return</span> ans.next;<span class="comment">//这样做最后返回这个头节点的next就是返回了这个新的链表</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="三-队列"><a href="#三-队列" class="headerlink" title="三.队列"></a>三.队列</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.LinkedList;</span><br><span class="line"><span class="keyword">import</span> java.util.Queue;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Tqueue</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Queue&lt;Integer&gt; queue = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">        queue.add(<span class="number">1</span>);</span><br><span class="line">        queue.add(<span class="number">2</span>);</span><br><span class="line">        queue.add(<span class="number">3</span>);</span><br><span class="line">        System.out.println(queue.toString());</span><br><span class="line">        <span class="keyword">int</span> q1 = queue.peek();  <span class="comment">//get</span></span><br><span class="line">        <span class="keyword">int</span> q2 = queue.poll();  <span class="comment">//remove and get</span></span><br><span class="line">        <span class="keyword">boolean</span> it = queue.isEmpty();</span><br><span class="line">        <span class="keyword">int</span> size = queue.size();</span><br><span class="line">        <span class="keyword">while</span> (!queue.isEmpty())&#123;</span><br><span class="line">            <span class="keyword">int</span> tem = queue.poll();</span><br><span class="line">            System.out.println(tem);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="四-栈"><a href="#四-栈" class="headerlink" title="四.栈"></a>四.栈</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Stack;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TSatck</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Stack&lt;Integer&gt; stack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">        stack.push(<span class="number">1</span>);</span><br><span class="line">        stack.push(<span class="number">2</span>);</span><br><span class="line">        stack.push(<span class="number">3</span>);</span><br><span class="line">        System.out.println(stack.toString());</span><br><span class="line">        stack.peek();</span><br><span class="line">        stack.pop();</span><br><span class="line">        stack.size();</span><br><span class="line">        stack.isEmpty();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="五-哈希表"><a href="#五-哈希表" class="headerlink" title="五.哈希表"></a>五.哈希表</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThashTable</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        HashMap&lt;Integer,String&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        map.size();</span><br><span class="line">        map.isEmpty();</span><br><span class="line">        map.containsKey(<span class="number">1</span>);</span><br><span class="line">        map.containsValue(<span class="string">&quot;wly&quot;</span>);</span><br><span class="line">        map.put(<span class="number">1</span>,<span class="string">&quot;wly&quot;</span>);</span><br><span class="line">        map.get(<span class="number">1</span>);</span><br><span class="line">        map.remove(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="六-堆"><a href="#六-堆" class="headerlink" title="六.堆"></a>六.堆</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Collections;</span><br><span class="line"><span class="keyword">import</span> java.util.Comparator;</span><br><span class="line"><span class="keyword">import</span> java.util.PriorityQueue;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Theap</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        PriorityQueue&lt;Integer&gt; minHeap = <span class="keyword">new</span> PriorityQueue&lt;Integer&gt;();</span><br><span class="line">        PriorityQueue&lt;Integer&gt; maxHeap = <span class="keyword">new</span> PriorityQueue&lt;Integer&gt;(<span class="number">11</span>,<span class="keyword">new</span> Comparator&lt;Integer&gt;()&#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span><span class="params">(Integer i1,Integer i2)</span></span>&#123;</span><br><span class="line">                <span class="keyword">return</span> i2.compareTo(i1);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="comment">//PriorityQueue&lt;Integer&gt; maxheap = new PriorityQueue&lt;&gt;(Collections.reverseOrder());</span></span><br><span class="line">        minHeap.peek();</span><br><span class="line">        maxHeap.poll();</span><br><span class="line">        maxHeap.size();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="七-集合"><a href="#七-集合" class="headerlink" title="七.集合"></a>七.集合</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.HashSet;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Tset</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        HashSet&lt;Integer&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">        set.add(<span class="number">1</span>);</span><br><span class="line">        set.add(<span class="number">1</span>);</span><br><span class="line">        set.add(<span class="number">2</span>);</span><br><span class="line">        set.add(<span class="number">3</span>);</span><br><span class="line">        set.contains(<span class="number">2</span>);</span><br><span class="line">        set.remove(<span class="number">2</span>);</span><br><span class="line">        set.size();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/07/Java%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E6%93%8D%E4%BD%9C/" data-id="ckojts1g20000os9i3j3h09ga" data-title="Java基本数据结构及其操作" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">Java数据结构</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-常用sql（MySQL）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/05/06/%E5%B8%B8%E7%94%A8sql%EF%BC%88MySQL%EF%BC%89/" class="article-date">
@@ -713,172 +907,11 @@
 
 
   
-    <article id="post-线程安全" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8/" class="article-date">
-  <time class="dt-published" datetime="2021-05-02T12:15:31.000Z" itemprop="datePublished">2021-05-02</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/05/02/%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8/">线程安全 （篇三）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="Java多线程-第三篇-线程安全"><a href="#Java多线程-第三篇-线程安全" class="headerlink" title="Java多线程 第三篇 线程安全"></a>Java多线程 第三篇 线程安全</h2><p>不妨先想想过去我们抢演唱会门票的时候，明明看到还有一张余票，但等我点击购买的时候，却告知一张票也没剩下。那必然此时有两个或多个人同时点击了购票按钮，假如每个抢票的人都拿到了票，那这个位置谁来做呢？问题由此出现。</p>
-<p>一个程序在多个线程同时运行本身是没有问题的，关键在对于共享资源的操作。读，当然也没有问题，但一旦发生了数据的修改（写，更新，指令交错），那问题就产生了。</p>
-<p>对几个我原来也没看懂或者难懂的地方进行解释</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">临界区: 一段代码如果对共享资源的多线程读写操作,这段代码就被称为临界区。</span><br><span class="line"></span><br><span class="line">指令交错指的是 java代码在解析成字节码文件时，java代码的一行代码在字节码中可能有多行，在线程上下文切换时就有可能交错。</span><br><span class="line"></span><br><span class="line">线程安全指的是多线程调用同一个对象的临界区的方法时，对象的属性值一定不会发生错误，这就是保证了线程安全。</span><br></pre></td></tr></table></figure>
-
-
-
-<p>对几个问题的思考</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">线程安全的类一定所有的操作都线程安全吗？</span><br><span class="line"></span><br><span class="line">线程安全指的是类里每一个独立的方法是线程安全的，但是方法的组合就不一定是线程安全的。</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">成员变量和静态变量是否线程安全?</span><br><span class="line"></span><br><span class="line">如果没有多线程共享，则线程安全</span><br><span class="line">如果存在多线程共享</span><br><span class="line">		多线程只有读操作，则线程安全</span><br><span class="line">		多线程存在写操作，写操作的代码又是临界区,则线程不安全</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">局部变量是否线程安全?</span><br><span class="line"></span><br><span class="line">局部变量是线程安全的</span><br><span class="line">局部变量引用的对象未必是线程安全的</span><br><span class="line">		如果该对象没有逃离该方法的作用范围，则线程安全</span><br><span class="line">		如果该对象逃离了该方法的作用范围，比如：方法的返回值,需要考虑线程安全</span><br></pre></td></tr></table></figure>
-
-<p>让线程安全有很多办法，也有很多的坑，本节先记录一下synchronized。</p>
-<h3 id="synchronized"><a href="#synchronized" class="headerlink" title="synchronized"></a>synchronized</h3><p>synchronized关键字（悲观锁）（锁的类型之后整理）</p>
-<blockquote>
-<p>synchronized是Java中的关键字，是一种同步锁。可修饰实例方法，静态方法，代码块。</p>
-</blockquote>
-<h4 id="使用区域"><a href="#使用区域" class="headerlink" title="使用区域"></a>使用区域</h4><ul>
-<li>修饰一个<strong>代码块</strong>，被修饰的代码块称为同步代码块，作用范围是大括号{}括起来的代码；进入同步代码库前要获得给定对象的锁</li>
-<li>修饰一个<strong>实例方法</strong>，被修饰的方法称为同步方法，其作用范围是整个方法，进入同步代码前要获得当前实例的锁</li>
-<li>修改一个<strong>静态方法</strong>，作用范围是整个静态方法；使用前要获得的当前类对象的锁</li>
-<li>修改一个<strong>类</strong>，作用范围是synchronized后面括号括起来的部分，使用前要获得的当前类对象的锁</li>
-</ul>
-<h4 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h4><ul>
-<li> 进入 synchronized代码块并不一定一直执行下去。如果时间片切换了，也会执行其他线程，再切换回来会紧接着执行，只是不会执行到有竞争锁的资源，因为当前线程还未释放锁。</li>
-<li>当一个线程执行完synchronized的代码块后 会唤醒正在等待的线程</li>
-<li>synchronized实际上使用对象锁保证临界区的原子性 临界区的代码是不可分割的 不会因为线程切换所打断</li>
-<li>底层实现原理是基于Java对象头与Monitor(之后解析)</li>
-</ul>
-<h4 id="代码用例"><a href="#代码用例" class="headerlink" title="代码用例"></a>代码用例</h4><h5 id="1-实例方法"><a href="#1-实例方法" class="headerlink" title="1.实例方法"></a>1.实例方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestSyn</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Object lockHelper = <span class="keyword">new</span> Object();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">            count++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        increase();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        Thread t1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> TestSyn());</span><br><span class="line">        Thread t2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> TestSyn());</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        t1.join();</span><br><span class="line">        t2.join();</span><br><span class="line">        System.out.println(count);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>此处已加锁，但本地运行结果为：16133(每次运行结果不同，但都是小于20000)，说明没有锁住。分析代码，syn修饰实例方法，锁住的是对象，但是启动线程时是新new的对象，这也就意味着存在着两个不同的实例对象锁，导致两个线程都拿到了各自的锁，同时进入了increase方法，无法保证线程安全。</p>
-<p>使用同一个对象</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestSyn</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Object lockHelper = <span class="keyword">new</span> Object();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">            count++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        increase();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        TestSyn ts = <span class="keyword">new</span> TestSyn();</span><br><span class="line">        Thread t1 = <span class="keyword">new</span> Thread(ts);</span><br><span class="line">        Thread t2 = <span class="keyword">new</span> Thread(ts);</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        t1.join();</span><br><span class="line">        t2.join();</span><br><span class="line">        System.out.println(count);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h5 id="2-静态方法"><a href="#2-静态方法" class="headerlink" title="2. 静态方法"></a>2. 静态方法</h5><p>对当前类对象加锁，进入同步代码前要获得当前类对象的锁</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestSyn</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Object lockHelper = <span class="keyword">new</span> Object();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">            count++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        increase();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        Thread t1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> TestSyn());</span><br><span class="line">        Thread t2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> TestSyn());</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        t1.join();</span><br><span class="line">        t2.join();</span><br><span class="line">        System.out.println(count);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h5 id="3-修饰一个代码块"><a href="#3-修饰一个代码块" class="headerlink" title="3. 修饰一个代码块"></a>3. 修饰一个代码块</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestSyn</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Object lockHelper = <span class="keyword">new</span> Object();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;其他无需保证线程安全的耗时操作&quot;</span>);</span><br><span class="line">        <span class="keyword">synchronized</span> (lockHelper) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        increase();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        Thread t1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> TestSyn());</span><br><span class="line">        Thread t2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> TestSyn());</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        t1.join();</span><br><span class="line">        t2.join();</span><br><span class="line">        System.out.println(count);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/05/02/%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8/" data-id="cko7bwmgv00008c9i73me1vcb" data-title="线程安全 （篇三）" class="article-share-link">分享</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-swagger" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/05/02/swagger/" class="article-date">
-  <time class="dt-published" datetime="2021-05-02T08:17:44.000Z" itemprop="datePublished">2021-05-02</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/05/02/swagger/">Swagger初探</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="Swagger-初探"><a href="#Swagger-初探" class="headerlink" title="Swagger 初探"></a>Swagger 初探</h2><h6 id="前后端分离时代的产物"><a href="#前后端分离时代的产物" class="headerlink" title="前后端分离时代的产物"></a>前后端分离时代的产物</h6><p>从早期word提前约定，到postman方便前后端解耦，到swagger实现接口展示更新，再到目前流行的apifox（相当于Postman + Swagger + Mock），技术不断更新发展。本章博客记录swagger的基本用法。</p>
-<h3 id="新建一个springboot项目，引入web依赖，写一个简单的hello接口。"><a href="#新建一个springboot项目，引入web依赖，写一个简单的hello接口。" class="headerlink" title="新建一个springboot项目，引入web依赖，写一个简单的hello接口。"></a>新建一个springboot项目，引入web依赖，写一个简单的hello接口。</h3><h3 id="引入依赖"><a href="#引入依赖" class="headerlink" title="引入依赖"></a>引入依赖</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.springfox<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>springfox-swagger2<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.9.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.springfox<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>springfox-swagger-ui<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.9.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>注意到下面那个依赖，名字里带ui，猜想可能是接口展示界面的风格。搜了一下，下面提供两个不同皮肤，可以把上面那个依赖改成下面的。</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 引入swagger-bootstrap-ui包 /doc.html--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.github.xiaoymin<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>swagger-bootstrap-ui<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.9.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 引入swagger-ui-layer包 /docs.html--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.github.caspar-chen<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>swagger-ui-layer<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.1.3<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>同时默认访问** <a target="_blank" rel="noopener" href="http://localhost:8080/swagger-ui.html**%EF%BC%8C**%E4%B9%9F%E5%BA%94%E8%AF%A5%E5%88%86%E5%88%AB%E6%94%B9%E6%88%90**http://localhost:8080/doc.html**%E5%92%8C**http://localhost:8080/docs.html">http://localhost:8080/swagger-ui.html**，**也应该分别改成**http://localhost:8080/doc.html**和**http://localhost:8080/docs.html</a>**</p>
-<h3 id="swagger配置-新建一个配置类"><a href="#swagger配置-新建一个配置类" class="headerlink" title="swagger配置,新建一个配置类"></a>swagger配置,新建一个配置类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Configuration;</span><br><span class="line"><span class="keyword">import</span> springfox.documentation.swagger2.annotations.EnableSwagger2;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableSwagger2</span>  <span class="comment">//开启swagger2</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SwaggerConfig</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>此时无需再加配置，启动后已经可以访问<a target="_blank" rel="noopener" href="http://localhost:8080/swagger-ui.html%E8%BF%9B%E8%A1%8C%E8%AE%BF%E9%97%AE%E3%80%82">http://localhost:8080/swagger-ui.html进行访问。</a></p>
-<img src="/2021/05/02/swagger/swagger1.png" width="90%" height="90%">
-
-<h4 id="配置封面-在conf中"><a href="#配置封面-在conf中" class="headerlink" title="配置封面(在conf中)"></a>配置封面(在conf中)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//配置文档信息</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> ApiInfo <span class="title">apiInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//作者信息   </span></span><br><span class="line">    Contact contact = <span class="keyword">new</span> Contact(<span class="string">&quot;njuptwly&quot;</span>,<span class="string">&quot;www,njuptwly.com&quot;</span>,<span class="string">&quot;1152936469@qq.com&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ApiInfo(</span><br><span class="line">            <span class="string">&quot;Swagger学习&quot;</span>, <span class="comment">// 标题</span></span><br><span class="line">            <span class="string">&quot;学习演示如何配置Swagger&quot;</span>, <span class="comment">// 描述</span></span><br><span class="line">            <span class="string">&quot;v1.0&quot;</span>, <span class="comment">// 版本号</span></span><br><span class="line">            <span class="string">&quot;www.njuptwly.com&quot;</span>, <span class="comment">// 组织链接</span></span><br><span class="line">             contact, <span class="comment">// 联系人信息</span></span><br><span class="line">            <span class="string">&quot;Apach 2.0 &quot;</span>, <span class="comment">// 许可</span></span><br><span class="line">            <span class="string">&quot;www.njuptwly.com&quot;</span>, <span class="comment">// 许可连接</span></span><br><span class="line">            <span class="keyword">new</span> ArrayList&lt;&gt;() <span class="comment">// 扩展</span></span><br><span class="line">    );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//将 Docket 实例关联上 apiInfo()</span></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Docket <span class="title">docket</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2).apiInfo(apiInfo());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>改成自己的之后可以运行看一下效果.</p>
-<h4 id="配置扫描接口-conf中"><a href="#配置扫描接口-conf中" class="headerlink" title="配置扫描接口(conf中)"></a>配置扫描接口(conf中)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Docket <span class="title">docket</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2)</span><br><span class="line">            .apiInfo(apiInfo())</span><br><span class="line">            .select()<span class="comment">// 通过.select()方法，去配置扫描接口,RequestHandlerSelectors配置如何扫描接口</span></span><br><span class="line">            .apis(RequestHandlerSelectors.basePackage(<span class="string">&quot;com.swagger.demo.controller&quot;</span>))<span class="comment">//配置包路径进行选择</span></span><br><span class="line">            .build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其他选择方式如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Docket <span class="title">docket</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2)</span><br><span class="line">                .apiInfo(apiInfo())</span><br><span class="line">                <span class="comment">//是否启动swagger 如果是false则不能在浏览器中使用</span></span><br><span class="line">                .enable(<span class="keyword">true</span>)</span><br><span class="line">                .select()</span><br><span class="line">                <span class="comment">//RequestHandlerSelectors.  配置要扫描的方式(+后面的方式)</span></span><br><span class="line">                <span class="comment">//basePackage()   指定要扫描的包</span></span><br><span class="line">                <span class="comment">//any()   扫描全部</span></span><br><span class="line">                <span class="comment">//none()  不扫描</span></span><br><span class="line">                <span class="comment">//withClassAnnotation()  扫描类上的注解，参数是一个注解的反射对象</span></span><br><span class="line">                <span class="comment">//withMethodAnnotation()   扫描方法上的注解</span></span><br><span class="line">                .apis(RequestHandlerSelectors.basePackage(<span class="string">&quot;com.swagger.demo.controller&quot;</span>))</span><br><span class="line">                <span class="comment">//.paths() .过滤URL(PathSelectors.)</span></span><br><span class="line">                <span class="comment">//any() 任何请求都扫描</span></span><br><span class="line">                <span class="comment">//none() 任何请求都不扫描</span></span><br><span class="line">                <span class="comment">//ant()	通过ant控制</span></span><br><span class="line">                <span class="comment">//regex() 通过正则表达式控制</span></span><br><span class="line">                .paths(PathSelectors.ant(<span class="string">&quot;/demo/**&quot;</span>))</span><br><span class="line">                .build();</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-
-<h5 id="swagger开关"><a href="#swagger开关" class="headerlink" title="swagger开关"></a>swagger开关</h5><p>只在生产环境显示</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//设置要显示的swagger环境</span></span><br><span class="line">        Profiles profiles = Profiles.of(<span class="string">&quot;dev&quot;</span>, <span class="string">&quot;test&quot;</span>);</span><br><span class="line">        <span class="comment">//通过environment.acceptsProfiles判断是否处于自己设定的环境中</span></span><br><span class="line">        <span class="keyword">boolean</span> flag = environment.acceptsProfiles(profiles);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2)</span><br><span class="line">                .groupName(<span class="string">&quot;Ferao-group&quot;</span>)</span><br><span class="line">                .apiInfo(apiInfo())</span><br><span class="line">                .enable(flag)</span><br><span class="line">                .select()</span><br><span class="line">                <span class="comment">//配置要扫描的接口</span></span><br><span class="line">                .apis(RequestHandlerSelectors.basePackage(<span class="string">&quot;com.ferao.controller&quot;</span>))</span><br><span class="line">                .paths(PathSelectors.ant(<span class="string">&quot;/users/**&quot;</span>))</span><br><span class="line">                .build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h5 id="api分组"><a href="#api分组" class="headerlink" title="api分组"></a>api分组</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Docket <span class="title">docket1</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2).groupName(<span class="string">&quot;user_api&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Docket <span class="title">docket1</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2).groupName(<span class="string">&quot;admin_api&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h4 id="实体类注解"><a href="#实体类注解" class="headerlink" title="实体类注解"></a>实体类注解</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ApiModel(&quot;用户实体&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    <span class="meta">@ApiModelProperty(&quot;用户名&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> String username;</span><br><span class="line">    <span class="meta">@ApiModelProperty(&quot;密码&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> String password;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在所有返回值为User上进行显示</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ApiModel</span>  <span class="comment">//为类添加注释,作用在模型类上</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@ApiModelProperty(value = &quot;xxx属性说明&quot;,hidden = true)</span>	<span class="comment">//作用在类方法和属性上，hidden设置为true可以隐藏该属性</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="接口注解"><a href="#接口注解" class="headerlink" title="接口注解"></a>接口注解</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Api(tags = &quot;&quot;)</span>	<span class="comment">//作用在模块类上</span></span><br><span class="line"><span class="meta">@ApiOperation(&quot;xxx接口说明&quot;)</span>	<span class="comment">//作用在接口方法上</span></span><br><span class="line"><span class="meta">@ApiParam(&quot;xxx参数说明&quot;)</span>	<span class="comment">//作用在参数、方法和字段上，类似@ApiModelProperty</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ApiOperation(&quot;获取用户名的接口&quot;)</span></span><br><span class="line"><span class="meta">@ApiResponses(&#123;</span></span><br><span class="line"><span class="meta">        @ApiResponse(code=200,message=&quot;请求成功&quot;),</span></span><br><span class="line"><span class="meta">        @ApiResponse(code=500,message=&quot;系统异常&quot;)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="meta">@PostMapping(&quot;/getUsername&quot;)</span></span><br><span class="line"><span class="meta">@ResponseBody</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getUsername</span><span class="params">(<span class="meta">@ApiParam(&quot;用户名&quot;)</span>String username)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> username;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>对参数的注解还有</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ApiImplicitParams(&#123;</span></span><br><span class="line"><span class="meta">     @ApiImplicitParams(&#123;</span></span><br><span class="line"><span class="meta">            @ApiImplicitParam(name = &quot;name&quot;, value = &quot;用户名&quot;, required = true, paramType = &quot;query&quot;, dataType = &quot;String&quot;)</span></span><br><span class="line"><span class="meta">    &#125;)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="comment">//paramtype 还有header,path,body</span></span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/05/02/swagger/" data-id="cko6zj6z7000crj9i4lcg6vgg" data-title="Swagger初探" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
     
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">下一页 &raquo;</a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">下一页 &raquo;</a>
   </nav>
 
 </section>
@@ -892,7 +925,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">Java数据结构</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag">微服务</a></li></ul>
     </div>
   </div>
 
@@ -902,7 +935,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a>
+      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
     </div>
   </div>
 
@@ -924,6 +957,14 @@
       <ul>
         
           <li>
+            <a href="/2021/05/11/%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%90%86%E8%AE%BA/">分布式架构理论</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/07/Java%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E6%93%8D%E4%BD%9C/">Java基本数据结构及其操作</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/06/%E5%B8%B8%E7%94%A8sql%EF%BC%88MySQL%EF%BC%89/">常用sql（MySQL）</a>
           </li>
         
@@ -933,14 +974,6 @@
         
           <li>
             <a href="/2021/05/04/Redis2/">Redission</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/04/%E6%97%A0%E9%94%81cas(%E5%85%AB)/">无锁cas（篇八）</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/">JMM及volatile关键字 （篇七）</a>
           </li>
         
       </ul>
