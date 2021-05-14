@@ -77,6 +77,103 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Docker" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/14/Docker/" class="article-date">
+  <time class="dt-published" datetime="2021-05-14T14:55:55.000Z" itemprop="datePublished">2021-05-14</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/14/Docker/">Docker介绍,使用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="Docker及在阿里云ecs上安装"><a href="#Docker及在阿里云ecs上安装" class="headerlink" title="Docker及在阿里云ecs上安装"></a>Docker及在阿里云ecs上安装</h2><h3 id="Docker介绍和使用场景"><a href="#Docker介绍和使用场景" class="headerlink" title="Docker介绍和使用场景"></a><strong>Docker介绍和使用场景</strong></h3><ul>
+<li><p>官网：<a target="_blank" rel="noopener" href="https://www.docker.com/get-started">https://www.docker.com/get-started</a></p>
+</li>
+<li><p>什么是Dokcer</p>
+<ul>
+<li>百科:一个开源的应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中，然后发布到任何流行的 Linux 机器上，也可以实现虚拟化。</li>
+<li>容器是完全使用沙箱机制，相互之间不会有任何接口，使用go语言编写，在LCX（linux容器）基础上进行的封装</li>
+<li>简单来说：<ul>
+<li>就是可以快速部署启动应用</li>
+<li>实现虚拟化，完整资源隔离</li>
+<li>一次编写，四处运行</li>
+<li>但有一定的限制，比如Docker是基于Linux 64bit的，无法在32bit的linux/Windows/unix环境下使用</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>为什么要用</p>
+<ul>
+<li>提供一次性的环境，假如需要安装Mysql，则需要安装很多依赖库、版本等，如果使用Docker则通过镜像就可以直接启动运行</li>
+<li>快速动态扩容，使用docker部署了一个应用，可以制作成镜像，然后通过Dokcer快速启动</li>
+<li>组建微服务架构，可以在一个机器上模拟出多个微服务，启动多个应用</li>
+<li>更好的资源隔离和共享</li>
+<li>一句话：开箱即用，快速部署，可移植性强，环境隔离</li>
+</ul>
+</li>
+</ul>
+<h3 id="阿里云ecs上安装docker"><a href="#阿里云ecs上安装docker" class="headerlink" title="阿里云ecs上安装docker"></a><strong>阿里云ecs上安装docker</strong></h3><ul>
+<li><p>远程连接ECS实例</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">windows工具  putty，xshell, security CRT</span><br><span class="line">苹果系统MAC ： 通过终端登录   ssh root@ip 回车后输入密码</span><br></pre></td></tr></table></figure></li>
+<li><p>依次运行以下命令添加yum源。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum update</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install epel-release -y</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum clean all</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum list</span><br></pre></td></tr></table></figure></li>
+<li><p>安装并运行Docker。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install docker-io -y</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start docker</span><br></pre></td></tr></table></figure></li>
+<li><p>检查安装结果。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker info</span><br></pre></td></tr></table></figure></li>
+<li><p>启动使用Docker</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start docker     #运行Docker守护进程</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl stop docker      #停止Docker守护进程   如果命令失效，直接kill进程</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl restart docker   #重启Docker守护进程</span><br></pre></td></tr></table></figure></li>
+<li><p>更多文档</p>
+<ul>
+<li><pre><code>https://help.aliyun.com/document_detail/51853.html?spm=a2c4g.11186623.6.820.RaToNY
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/14/Docker/" data-id="ckoob38610000zvse1a6dbdwx" data-title="Docker介绍,使用" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-线程池" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/05/13/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="article-date">
@@ -920,84 +1017,6 @@
 
 
   
-    <article id="post-可重入锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/05/03/%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/" class="article-date">
-  <time class="dt-published" datetime="2021-05-03T12:50:23.000Z" itemprop="datePublished">2021-05-03</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/05/03/%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/">可重入锁 （篇五）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="Java多线程-第五篇-可重入锁ReentrantLock"><a href="#Java多线程-第五篇-可重入锁ReentrantLock" class="headerlink" title="Java多线程 第五篇 可重入锁ReentrantLock"></a>Java多线程 第五篇 可重入锁ReentrantLock</h2><p>前面提到  </p>
-<blockquote>
-<p>LockSupport是非重入的。</p>
-</blockquote>
-<p>这篇来记录一下重入锁，主要以ReentrantLock为例，当然前面的synchronized也是可重入锁。</p>
-<blockquote>
-<p>可重入锁（也叫递归锁）：指的是同一线程外层函数获得锁之后，内层递归函数仍然可以获取该锁的代码，在同一线程在外层方法获取锁的时候+，在进入内层方法会自动获取锁。</p>
-<p>也就是说，线程可以进入任何一个它已经拥有的锁所同步着的代码块。</p>
-</blockquote>
-<h4 id="Lock接口"><a href="#Lock接口" class="headerlink" title="Lock接口"></a>Lock接口</h4><p>ReentrantLock 实现了Java中锁的核心接口Lock</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">//获取锁，获取不到lock就不罢休，不可被打断,即使当前线程被中断，线程也一直阻塞，直到拿到锁， 比较无赖的做法。</span></span><br><span class="line">   <span class="function"><span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">  *获取锁，可中断，如果获取锁之前当前线程被interrupt了，</span></span><br><span class="line"><span class="comment">  *获取锁之后会抛出InterruptedException，并且停止当前线程；</span></span><br><span class="line"><span class="comment">  *优先响应中断</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">   <span class="function"><span class="keyword">void</span> <span class="title">lockInterruptibly</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//立即返回结果；尝试获得锁,如果获得锁立即返回ture,失败立即返回false</span></span><br><span class="line">   <span class="function"><span class="keyword">boolean</span> <span class="title">tryLock</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//尝试拿锁，可设置超时时间，超时返回false，即过时不候</span></span><br><span class="line">   <span class="function"><span class="keyword">boolean</span> <span class="title">tryLock</span><span class="params">(<span class="keyword">long</span> time, TimeUnit unit)</span> <span class="keyword">throws</span> InterruptedException</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//释放锁</span></span><br><span class="line">   <span class="function"><span class="keyword">void</span> <span class="title">unlock</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//返回当前线程的Condition ，可多次调用</span></span><br><span class="line">   <span class="function">Condition <span class="title">newCondition</span><span class="params">()</span></span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="ReentrantLock私有public方法"><a href="#ReentrantLock私有public方法" class="headerlink" title="ReentrantLock私有public方法"></a>ReentrantLock私有public方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//传入boolean值,true时create一个公平锁，false为非公平锁</span></span><br><span class="line"> ReentrantLock(<span class="keyword">boolean</span> fair) </span><br><span class="line">   </span><br><span class="line"><span class="comment">//查看有多少线程等待锁</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getQueueLength</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//是否有线程等待抢锁</span></span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">hasQueuedThreads</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//是否有指定线程等待抢锁</span></span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">hasQueuedThread</span><span class="params">(Thread thread)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//当前线程是否抢到锁。返回0代表没有</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getHoldCount</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//查询此锁是否由任何线程持有</span></span></span><br><span class="line"><span class="function"> <span class="keyword">boolean</span> <span class="title">isLocked</span><span class="params">()</span></span></span><br><span class="line"><span class="function"> </span></span><br><span class="line"><span class="function"> <span class="comment">//是否为公平锁</span></span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">isFair</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span></span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="ReentrantLock中Condition的使用"><a href="#ReentrantLock中Condition的使用" class="headerlink" title="ReentrantLock中Condition的使用"></a>ReentrantLock中Condition的使用</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Condition</span> </span>&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	*Condition线程进入阻塞状态,调用signal()或者signalAll()再次唤醒，</span></span><br><span class="line"><span class="comment">	*允许中断如果在阻塞时锁持有线程中断，会抛出异常；</span></span><br><span class="line"><span class="comment">	*重要一点是：在当前持有Lock的线程中，当外部调用await()后，ReentrantLock就允许其他线程来抢夺锁当前锁，</span></span><br><span class="line"><span class="comment">	*注意：通过创建Condition对象来使线程wait，必须先执行lock.lock方法获得锁</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">await</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Condition线程进入阻塞状态,调用signal()或者signalAll()再次唤醒，不允许中断，如果在阻塞时锁持有线程中断，继续等待唤醒</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">awaitUninterruptibly</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//设置阻塞时间，超时继续，超时时间单位为纳秒，其他同await()；返回时间大于零，表示是被唤醒，等待时间并且可以作为等待时间期望值，小于零表示超时</span></span><br><span class="line">    <span class="function"><span class="keyword">long</span> <span class="title">awaitNanos</span><span class="params">(<span class="keyword">long</span> nanosTimeout)</span> <span class="keyword">throws</span> InterruptedException</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//类似awaitNanos(long nanosTimeout);返回值：被唤醒true，超时false</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">await</span><span class="params">(<span class="keyword">long</span> time, TimeUnit unit)</span> <span class="keyword">throws</span> InterruptedException</span>;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//类似await(long time, TimeUnit unit) </span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">awaitUntil</span><span class="params">(Date deadline)</span> <span class="keyword">throws</span> InterruptedException</span>;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//唤醒指定线程</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">signal</span><span class="params">()</span></span>;</span><br><span class="line">	</span><br><span class="line">    <span class="comment">//唤醒全部线程</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">signalAll</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>ReentrantLock.Condition的线程通信：<br>ReentrantLock.Condition是在粒度和性能上都优于Object的notify()、wait()、notifyAll()线程通信的方式。</p>
-<p>Condition中通信方法相对Object的通信在粒度上是粒度更细化，表现在一个Lock对象上引入多个Condition监视器、通信方法中除了和Object对应的三个基本函数外，更是新增了线程中断、阻塞超时的函数；<br>Condition中通信方法相对Object的通信在性能上更高效，性能的优化表现在ReentrantLock比较synchronized的优化 </p>
-<h4 id="ReentrantLock比synchronized优点"><a href="#ReentrantLock比synchronized优点" class="headerlink" title="ReentrantLock比synchronized优点"></a>ReentrantLock比synchronized优点</h4><ol>
-<li>支持获取锁的超时时间</li>
-<li>获取锁时可被打断</li>
-<li>可设为公平锁</li>
-<li>可以有不同的条件变量，即有多个waitSet，可以指定唤醒</li>
-<li>灵活度高（synchronized更简单）</li>
-</ol>
-<h4 id="开发运用场景"><a href="#开发运用场景" class="headerlink" title="开发运用场景"></a>开发运用场景</h4><h5 id="1-公平锁，线程排序执行，防饿死应用场景；"><a href="#1-公平锁，线程排序执行，防饿死应用场景；" class="headerlink" title="1.公平锁，线程排序执行，防饿死应用场景；"></a>1.公平锁，线程排序执行，防饿死应用场景；</h5><p>公平锁原则必须按照锁申请时间上先到先得的原则分配机制场景；</p>
-<p>1）.实现逻辑 上(包括：软件中函数计算、业务先后流程；硬件中操作实现中顺序逻辑)的顺序排队机制的场景；<br>软件场景：用户交互View中对用户输入结果分析类，分析过程后面算法依赖上一步结果的场景，例如：推荐算法实现[根据性别、年龄筛选]、阻塞队列的实现；<br>硬件场景：需要先分析确认用户操作类型硬件版本或者厂家，然后发出操作指令；例如：自动售货机；</p>
-<p>2）.现实 生活中 时间排序的 公平原则：例如：客服分配，必须是先到先服务，不能出现饿死现象；</p>
-<h5 id="2-非公平锁-效率的体现者；"><a href="#2-非公平锁-效率的体现者；" class="headerlink" title="2.非公平锁,效率的体现者；"></a>2.非公平锁,效率的体现者；</h5><h5 id="3-ReentrantLock-Condition线程通信"><a href="#3-ReentrantLock-Condition线程通信" class="headerlink" title="3.ReentrantLock.Condition线程通信"></a>3.ReentrantLock.Condition线程通信</h5><p>两个<strong>线程之间交替打印</strong> 26英文字母和阿拉伯数字为demo</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">alternateTask</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ReentrantLock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line">        Condition condition1 = lock.newCondition();</span><br><span class="line">        Condition condition2 = lock.newCondition();</span><br><span class="line">        Thread thread1 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                lock.lock();</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">65</span>; i &lt; <span class="number">91</span>; i++) &#123;</span><br><span class="line">                    System.out.println(<span class="string">&quot;----------thread1------- &quot;</span> + (<span class="keyword">char</span>) i);</span><br><span class="line">                    condition2.signal();</span><br><span class="line">                    condition1.await();</span><br><span class="line">                &#125;</span><br><span class="line">                condition2.signal();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                lock.unlock();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        Thread thread2 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                lock.lock();</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">26</span>; i++) &#123;</span><br><span class="line">                    System.out.println(<span class="string">&quot;----------thread2------- &quot;</span> + i);</span><br><span class="line">                    condition1.signal();</span><br><span class="line">                    condition2.await();</span><br><span class="line">                &#125;</span><br><span class="line">                condition1.signal();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                lock.unlock();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        thread1.start();</span><br><span class="line">        thread2.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h5 id="4-中断杀器应用"><a href="#4-中断杀器应用" class="headerlink" title="4.中断杀器应用"></a>4.中断杀器应用</h5><p>ReentrantLock中lockInterruptibly( )和lock( )最大的区别就是中断相应问题：<br>lock()是支持中断相应的阻塞试的获取方式，因此即使主动中断了锁的持有者，但是它不能立即unlock(),仍然要机械版执行完所有操作才会释放锁。<br>lockInterruptibly( )是 优先响应中断的，这样有个优势就是可以通过tryLock()、tryLock(timeout, TimeUnit.SECONDS)方法，中断优先级低的Task，及时释放资源给优先级更高的Task</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           lock.lockInterruptibly();</span><br><span class="line">           <span class="keyword">if</span> (lock.tryLock(timeout, TimeUnit.SECONDS)) &#123;</span><br><span class="line">               <span class="comment">//TODO</span></span><br><span class="line">           &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">               <span class="comment">//超时直接中断优先级低的Task</span></span><br><span class="line">               Thread.currentThread().interrupt();</span><br><span class="line">               lock.lock();</span><br><span class="line">               <span class="comment">//TODO</span></span><br><span class="line">           &#125;</span><br><span class="line">       &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">           e.printStackTrace();</span><br><span class="line">           &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">               lock.unlock();</span><br><span class="line">           &#125;</span><br><span class="line">          </span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/05/03/%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/" data-id="cko8pfieo0001ru9ia7tkgnvv" data-title="可重入锁 （篇五）" class="article-share-link">分享</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1016,7 +1035,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">Java数据结构</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag">微服务</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" rel="tag">Java工具类</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">Java数据结构</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jwt/" rel="tag">jwt</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag">微服务</a></li></ul>
     </div>
   </div>
 
@@ -1026,7 +1045,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
     </div>
   </div>
 
@@ -1048,6 +1067,10 @@
       <ul>
         
           <li>
+            <a href="/2021/05/14/Docker/">Docker介绍,使用</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/13/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池（篇九）</a>
           </li>
         
@@ -1061,10 +1084,6 @@
         
           <li>
             <a href="/2021/05/06/%E5%B8%B8%E7%94%A8sql%EF%BC%88MySQL%EF%BC%89/">常用sql（MySQL）</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/05/Redis3/">Redis 事务</a>
           </li>
         
       </ul>
