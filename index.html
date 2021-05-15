@@ -77,6 +77,84 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Docker常用指令" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/15/Docker%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4/" class="article-date">
+  <time class="dt-published" datetime="2021-05-15T14:55:55.000Z" itemprop="datePublished">2021-05-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/15/Docker%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4/">Docker常用指令</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="Docker常用指令"><a href="#Docker常用指令" class="headerlink" title="Docker常用指令"></a>Docker常用指令</h2><ul>
+<li><p>常用命令（安装部署好Docker后，执行的命令是docker开头）,xxx是镜像名称</p>
+</li>
+<li><p>搜索镜像：docker search xxx</p>
+</li>
+<li><p>列出当前系统存在的镜像：docker images</p>
+</li>
+<li><p>拉取镜像：docker pull xxx</p>
+<ul>
+<li>xxx是具体某个镜像名称(格式 REPOSITORY:TAG)</li>
+<li>REPOSITORY：表示镜像的仓库源,TAG：镜像的标签</li>
+</ul>
+</li>
+<li><p>运行一个容器：</p>
+<p>docker run –name nginx-xd -p 8080:80 -d nginx</p>
+<p>docker run - 运行一个容器      </p>
+<p>-d 后台运行</p>
+<p> -p 端口映射</p>
+<p> –name “xxx”  容器名称</p>
+</li>
+<li><p>列举当前运行的容器：docker ps</p>
+</li>
+<li><p>检查容器内部信息：docker inspect 容器名称</p>
+</li>
+<li><p>删除镜像：docker rmi IMAGE_NAME</p>
+<ul>
+<li>强制移除镜像不管是否有容器使用该镜像 增加 -f 参数</li>
+</ul>
+</li>
+<li><p>停止某个容器：docker stop 容器名称</p>
+</li>
+<li><p>启动某个容器：docker start 容器名称</p>
+</li>
+<li><p>移除某个容器： docker rm 容器名称 （容器必须是停止状态）</p>
+</li>
+<li><p>列举全部 容器 ： docker ps -a</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/15/Docker%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4/" data-id="ckoq2jpu20000u69i263jhg81" data-title="Docker常用指令" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Docker" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/05/14/Docker/" class="article-date">
@@ -964,59 +1042,6 @@
 
 
   
-    <article id="post-死锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/05/03/%E6%AD%BB%E9%94%81/" class="article-date">
-  <time class="dt-published" datetime="2021-05-03T13:50:23.000Z" itemprop="datePublished">2021-05-03</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/05/03/%E6%AD%BB%E9%94%81/">死锁 （篇六）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="Java多线程-第六篇-死锁"><a href="#Java多线程-第六篇-死锁" class="headerlink" title="Java多线程 第六篇 死锁"></a>Java多线程 第六篇 死锁</h2><p>设想一个场景，A手握锁a，等候拿锁b，B拿着锁b，等待获取锁a。</p>
-<h4 id="产生的原因"><a href="#产生的原因" class="headerlink" title="产生的原因"></a>产生的原因</h4><p>a. 竞争资源</p>
-<p>系统中的资源可以分为两类：<br>可剥夺资源，是指某进程在获得这类资源后，该资源可以再被其他进程或系统剥夺，CPU和主存均属于可剥夺性资源；<br>另一类资源是不可剥夺资源，当系统把这类资源分配给某进程后，再不能强行收回，只能在进程用完后自行释放，如磁带机、打印机等。<br>产生死锁中的竞争资源之一指的是竞争不可剥夺资源（例如：系统中只有一台打印机，可供进程P1使用，假定P1已占用了打印机，若P2继续要求打印机打印将阻塞）<br>产生死锁中的竞争资源另外一种资源指的是竞争临时资源（临时资源包括硬件中断、信号、消息、缓冲区内的消息等），通常消息通信顺序进行不当，则会产生死锁</p>
-<p>b. 进程间推进顺序非法</p>
-<p>若P1保持了资源R1,P2保持了资源R2，系统处于不安全状态，因为这两个进程再向前推进，便可能发生死锁<br>例如，当P1运行到P1：Request（R2）时，将因R2已被P2占用而阻塞；当P2运行到P2：Request（R1）时，也将因R1已被P1占用而阻塞，于是发生进程死锁</p>
-<h4 id="检测方法"><a href="#检测方法" class="headerlink" title="检测方法"></a>检测方法</h4><p><strong>1、Jstack命令</strong></p>
-<p><strong>2、JConsole工具</strong></p>
-<h4 id="解除死锁"><a href="#解除死锁" class="headerlink" title="解除死锁"></a>解除死锁</h4><p>剥夺资源：从其它进程剥夺足够数量的资源给死锁进程，以解除死锁状态；</p>
-<p>撤消进程：可以直接撤消死锁进程或撤消代价最小的进程，直至有足够的资源可用，死锁状态.消除为止；所谓代价是指优先级、运行代价、进程的重要性和价值等。</p>
-<h4 id="预防死锁"><a href="#预防死锁" class="headerlink" title="预防死锁"></a>预防死锁</h4><p>1、以确定的顺序获得锁</p>
-<p>如果必须获取多个锁，那么在设计的时候需要充分考虑不同线程之前获得锁的顺序。</p>
-<p>2、超时放弃</p>
-<p>当使用synchronized关键词提供的内置锁时，只要线程没有获得锁，那么就会永远等待下去，然而Lock接口提供了boolean tryLock(long time, TimeUnit unit) throws InterruptedException方法，该方法可以按照固定时长等待锁，因此线程可以在获取锁超时以后，主动释放之前已经获得的所有的锁。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/05/03/%E6%AD%BB%E9%94%81/" data-id="cko8pfiep0003ru9i52zjbxq6" data-title="死锁 （篇六）" class="article-share-link">分享</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1045,7 +1070,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
+      <a href="/tags/Docker/" style="font-size: 13.33px;">Docker</a> <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
     </div>
   </div>
 
@@ -1067,6 +1092,10 @@
       <ul>
         
           <li>
+            <a href="/2021/05/15/Docker%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4/">Docker常用指令</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/14/Docker/">Docker介绍,使用</a>
           </li>
         
@@ -1080,10 +1109,6 @@
         
           <li>
             <a href="/2021/05/07/Java%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E6%93%8D%E4%BD%9C/">Java基本数据结构及其操作</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/06/%E5%B8%B8%E7%94%A8sql%EF%BC%88MySQL%EF%BC%89/">常用sql（MySQL）</a>
           </li>
         
       </ul>
