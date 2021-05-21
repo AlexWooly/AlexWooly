@@ -77,6 +77,165 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Docker常见指令大全及其详解整理" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/19/Docker%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4%E5%A4%A7%E5%85%A8%E5%8F%8A%E5%85%B6%E8%AF%A6%E8%A7%A3%E6%95%B4%E7%90%86/" class="article-date">
+  <time class="dt-published" datetime="2021-05-19T14:55:55.000Z" itemprop="datePublished">2021-05-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/19/Docker%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4%E5%A4%A7%E5%85%A8%E5%8F%8A%E5%85%B6%E8%AF%A6%E8%A7%A3%E6%95%B4%E7%90%86/">Docker常用指令大全及其详解整理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="Docker常用指令大全及其详解整理"><a href="#Docker常用指令大全及其详解整理" class="headerlink" title="Docker常用指令大全及其详解整理"></a><strong>Docker常用指令大全及其详解整理</strong></h1><p>设置开机启动：systemctl enable docker</p>
+<p>启动docker：systemctl start docker</p>
+<p>查看版本：docker version </p>
+<p>查看详细信息：docker info</p>
+<h3 id="镜像操作"><a href="#镜像操作" class="headerlink" title="镜像操作"></a><strong>镜像操作</strong></h3><p>查看本地镜像：docker images </p>
+<p>搜索镜像：docker search [name]      #name为你想拉取镜像的名字,如nginx，centos</p>
+<p>搜索镜像并过滤是官方的： docker search –filter “is-official=true” [name]</p>
+<p>搜索镜像并过滤大于多少颗星星的：docker search –filter stars=10 [name] </p>
+<p>下载centos7镜像：docker pull centos:7   #不指定版本：7则为默认最新版本：latest </p>
+<p>修改本地镜像名字（小写）：docker tag [本地镜像名称]  [想改的名称]    </p>
+<p>本地镜像的删除：docker rmi centos:7</p>
+<h3 id="阿里云镜像加速"><a href="#阿里云镜像加速" class="headerlink" title="阿里云镜像加速"></a><strong>阿里云镜像加速</strong></h3><p>配置步骤：vi /etc/docker/daemon.json </p>
+<p>添加 </p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line"><span class="attr">&quot;registry-mirrors&quot;</span>: [<span class="string">&quot;https://5xok66d4.mirror.aliyuncs.com&quot;</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>!!!注意，每个人的<a target="_blank" rel="noopener" href="https://5xok66d4.mirror.aliyuncs.com不一样,进入**https//cr.console.aliyun.com/cn-shenzhen/instances/mirrors">https://5xok66d4.mirror.aliyuncs.com不一样，进入**https://cr.console.aliyun.com/cn-shenzhen/instances/mirrors</a>** **查看</p>
+<p>重启：systemctl daemon-reload &amp;&amp; systemctl restart docker</p>
+<h3 id="容器操作"><a href="#容器操作" class="headerlink" title="容器操作"></a><strong>容器操作</strong></h3><p>构建容器：docker run -itd –name=mycentos centos:7   #注意版本号的指定</p>
+<p>-i ：表示以交互模式运行容器（让容器的标准输入保持打开）</p>
+<p>-d：表示后台运行容器，并返回容器ID </p>
+<p>-t：为容器重新分配一个伪输入终端 </p>
+<p>–name：为容器指定名称</p>
+<p>-p：端口映射  -p 80:8080 </p>
+<p>-v：容器挂载，把容器内文件挂载到宿主机文件上，方便排查错误</p>
+<p> 查看本地所有的容器：docker ps -a </p>
+<p>查看本地正在运行的容器：docker ps </p>
+<p>停止容器：docker stop CONTAINER_ID / CONTAINER_NAME</p>
+<p> 一次性停止所有容器：docker stop $(docker ps -a -q) </p>
+<p>启动容器：docker start CONTAINER_ID / CONTAINER_NAME </p>
+<p>重启容器：docker restart CONTAINER_ID / CONTAINER_NAME </p>
+<p>删除容器：docker rm CONTAINER_ID / CONTAINER_NAME </p>
+<p>强制删除容器：docker rmi -f CONTAINER_ID / CONTAINER_NAME </p>
+<p>查看容器详细信息：docker inspect CONTAINER_ID / CONTAINER_NAME </p>
+<p>进入容器：docker exec -it 0ad5d7b2c3a4 /bin/bash</p>
+<h3 id="容器的文件复制与挂载"><a href="#容器的文件复制与挂载" class="headerlink" title="容器的文件复制与挂载"></a><strong>容器的文件复制与挂载</strong></h3><p>从宿主机复制到容器：docker cp 宿主机本地路径 容器名字/ID：容器路径    docker cp /root/123.txt mycentos:/home/ </p>
+<p>从容器复制到宿主机：docker cp 容器名字/ID：容器路径 宿主机本地路径     docker cp mycentos:/home/456.txt /root </p>
+<p>宿主机文件夹挂载到容器里：docker run -itd -v 宿主机路径:容器路径 镜像ID    docker run -itd -v /root/xdclass/:/home centos:7</p>
+<h3 id="自定义镜像"><a href="#自定义镜像" class="headerlink" title="自定义镜像"></a><strong>自定义镜像</strong></h3><ul>
+<li><p>基于Docker Commit制作镜像 </p>
+<p>docker commit 4eb9d14ebb18[原镜像id] mycentos:7[new名称] </p>
+<p>docker commit -a “XD” -m “mkdir /home/xdclass” 4eb9d14ebb18 mcentos:7</p>
+<p> -a：标注作者</p>
+<p> -m：说明注释 </p>
+<p>查看详细信息：docker inspect [container]</p>
+</li>
+<li><p>基于dockerfile制作镜像(主流的制作镜像方式)</p>
+<ul>
+<li><p>Dockerfile 指令</p>
+<p>FROM 基于哪个镜像 </p>
+<p>MAINTAINER 注明作者 </p>
+<p>COPY 复制文件进入镜像（只能用相对路径，不能用绝对路径） </p>
+<p>ADD 复制文件进入镜像（假如文件是.tar.gz文件会解压） </p>
+<p>WORKDIR： 指定工作目录，假如路径不存在会创建路径 </p>
+<p>ENV 设置环境变量 </p>
+<p>EXPOSE 暴露容器端口 </p>
+<p>RUN 在构建镜像的时候执行，作用于镜像层面 </p>
+<p>ENTRYPOINT 在容器启动的时候执行，作用于容器层;dockerfile里有多条时只允许执行最后一条 </p>
+<p>CMD 在容器启动的时候执行，作用于容器层;dockerfile里有多条时只允许执行最后一条;容器启动后执行默认的命令或者参数，允许被修改 </p>
+<ul>
+<li>命令格式：</li>
+<li> shell命令格式：RUN yum install -y net-tools </li>
+<li>exec命令格式：RUN [ “yum”,”install” ,”-y” ,”net-tools”]</li>
+</ul>
+</li>
+</ul>
+<p>构建：docker build -t mycentos:v2 .   （注意最后一个小点，.表示当前路径下，即在dockfile文件所在文件夹下进行操作）</p>
+<ul>
+<li><p>实例(对照上面语句进行复习)</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># this is a dockerfile</span></span><br><span class="line"><span class="keyword">FROM</span> centos:<span class="number">7</span></span><br><span class="line"><span class="keyword">MAINTAINER</span> XD <span class="number">123456</span>@qq.com</span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> <span class="built_in">echo</span> <span class="string">&quot;正在构建镜像！！！&quot;</span></span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /home/njuptwly</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> 123.txt /home/wlynjuptwly</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum install -y net-tools</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:<span class="number">7</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> jdk-8u211-linux-x64.tar.gz /usr/<span class="built_in">local</span></span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> mv /usr/<span class="built_in">local</span>/jdk1.8.0_211 /usr/<span class="built_in">local</span>/jdk</span></span><br><span class="line"><span class="keyword">ENV</span> JAVA_HOME=/usr/local/jdk</span><br><span class="line"><span class="keyword">ENV</span> JRE_HOME=$JAVA_HOME/jre</span><br><span class="line"><span class="keyword">ENV</span> CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH</span><br><span class="line"><span class="keyword">ENV</span> PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH</span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> apache-tomcat-8.5.35.tar.gz /usr/<span class="built_in">local</span></span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> mv /usr/<span class="built_in">local</span>/apache-tomcat-8.5.35 /usr/<span class="built_in">local</span>/tomcat</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">8080</span>                                               <span class="comment">#暴露端口，允许访问</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">&quot;/usr/local/tomcat/bin/catalina.sh&quot;</span>,<span class="string">&quot;run&quot;</span>]    <span class="comment">#安装好后进行启动</span></span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h3 id="Docker-容器的网络模式"><a href="#Docker-容器的网络模式" class="headerlink" title="Docker 容器的网络模式"></a><strong>Docker 容器的网络模式</strong></h3><ul>
+<li><p>bridge：桥接模式，该模式是docker 的默认网络设置，当Docker服务启动时，会在主机上创建一个名为docker0的虚拟网桥，并 选择一个和宿主机不同的IP地址和子网分配给docker0网桥</p>
+</li>
+<li><p>host：主机模式，该模式下容器是不会拥有自己的ip地址，而是使用宿主机的ip地址和端口。</p>
+</li>
+<li><p>none：无网络模式,无法连外网,内部调试用，很少用</p>
+<p>查看网络模式： docker network ls</p>
+</li>
+</ul>
+<h3 id="容器通信"><a href="#容器通信" class="headerlink" title="容器通信"></a><strong>容器通信</strong></h3><ul>
+<li><p>基于link单向通信</p>
+<p>docker run -itd –name tomcat_test –link mysql_test tomcat    #启动tomcat应用容器并link到mysql数据库（注意：mysql_test这个容器一定要存在！）</p>
+</li>
+<li><p>brige网桥实现双向通信</p>
+<p>创建一个新的网桥：docker network create -d bridge my_bridge </p>
+<p>启动第一个容器：docker run -itd –name tomcat_test tomcat </p>
+<p>启动第二个容器：docker run -itd –name redis_test reds </p>
+<p>把第一个容器加入网桥：docker network connect my_bridge tomcat_test </p>
+<p>把第二个容器加入网桥：docker network connect my_bridge redis_test</p>
+</li>
+</ul>
+<h3 id="容器的特权模式"><a href="#容器的特权模式" class="headerlink" title="容器的特权模式"></a><strong>容器的特权模式</strong></h3><p>启动一个普通的容器 docker run -itd –name mycentos centos:7 /bin/bash </p>
+<p>安装网络工具： yum -y install net-tools </p>
+<p>执行    route -n </p>
+<p>删除网关： route del default gw 172.17.0.1 </p>
+<p>启动拥有特权模式的容器： docker run -itd –privileged=true –name mycentos1 centos:7 /bin/bash </p>
+<p>进入容器： docker exec -it ef /bin/bash </p>
+<p>删除网关成功</p>
+<h3 id="Volume数据共享"><a href="#Volume数据共享" class="headerlink" title="Volume数据共享"></a><strong>Volume数据共享</strong></h3><ul>
+<li><p>dockerfile </p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:<span class="number">7</span> </span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">&quot;/usr/local&quot;</span>] </span></span><br></pre></td></tr></table></figure>
+
+<p>注意：在dockerfile里设置volume是无法修改宿主机的挂载路径的</p>
+</li>
+<li><p>使用volume容器共享创建nginx集群 </p>
+<ul>
+<li>使用–volumes-from 实现容器与容器之间volume共享 </li>
+<li>创建nginx1 docker run -itd -p 8080:80 -v /usr/local/nginx/html:/usr/local/nginx/html –name nginx1 mycentos:nginx /usr/local/nginx/sbin/nginx -g “daemon off;”   #第一个容器与主机挂载</li>
+<li>创建nginx2 docker run -itd -p 8081:80 –volumes-from nginx1 –name nginx2 mycentos:nginx /usr/local/nginx/sbin/nginx -g “daemon off;” </li>
+<li>创建nginx3 docker run -itd -p 8082:80 –volumes-from nginx1 –name nginx3 mycentos:nginx /usr/local/nginx/sbin/nginx -g “daemon off;” </li>
+<li>对/usr/local/nginx/html/index.html进行修改 打开浏览器进行访问测试</li>
+<li>用docker inspect 容器ID 查看详细的挂载信息</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/05/19/Docker%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4%E5%A4%A7%E5%85%A8%E5%8F%8A%E5%85%B6%E8%AF%A6%E8%A7%A3%E6%95%B4%E7%90%86/" data-id="ckoy373ko0000as9i7qej89wp" data-title="Docker常用指令大全及其详解整理" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Docker常用指令" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/05/15/Docker%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4/" class="article-date">
@@ -136,8 +295,11 @@
 </li>
 <li><p>列举全部 容器 ： docker ps -a</p>
 </li>
+<li><p>查看容器启动日志：docker logs -f containerid</p>
+</li>
 </ul>
-
+<p><strong>阿里云私有镜像仓库创建</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;登录</span><br><span class="line">docker login --username&#x3D;【username】 registry.cn-shenzhen.aliyuncs.com</span><br><span class="line">&#x2F;&#x2F;打标签</span><br><span class="line">docker tag containerid registry.cn-shenzhen.aliyuncs.com&#x2F;xdclass-cloud&#x2F;cloud-gateway:[版本号]</span><br><span class="line">&#x2F;&#x2F;推送</span><br><span class="line">docker push registry.cn-shenzhen.aliyuncs.com&#x2F;xdclass-cloud&#x2F;cloud-gateway:[版本号]</span><br></pre></td></tr></table></figure>
       
     </div>
     <footer class="article-footer">
@@ -988,60 +1150,6 @@
 
 
   
-    <article id="post-JMM及volatile关键字" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/" class="article-date">
-  <time class="dt-published" datetime="2021-05-03T14:50:23.000Z" itemprop="datePublished">2021-05-03</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/">JMM及volatile关键字 （篇七）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="Java多线程-第七篇-JMM及volatile关键字"><a href="#Java多线程-第七篇-JMM及volatile关键字" class="headerlink" title="Java多线程 第七篇 JMM及volatile关键字"></a>Java多线程 第七篇 JMM及volatile关键字</h2><h3 id="JMM（Java内存区域）"><a href="#JMM（Java内存区域）" class="headerlink" title="JMM（Java内存区域）"></a>JMM（Java内存区域）</h3><p>Java虚拟机在运行程序时会把其自动管理的内存划分为几个区域：</p>
-<p>所有线程共享区域：方法区（Method Area）<strong>（OOM可能出现的地方 ）</strong>，JVM堆（Java Heap）</p>
-<p>线程私有区域：程序计数器(Program Counter Register)，虚拟机栈(Java Virtual Machine Stacks)，本地方法栈(Native Method Stacks)</p>
-<h3 id="JMM的承诺"><a href="#JMM的承诺" class="headerlink" title="JMM的承诺"></a>JMM的承诺</h3><ol>
-<li>原子性 保证指令不会受到上下文切换的影响（如synchronized关键字）</li>
-<li>可见性 保证指令不会受到cpu缓存的影响</li>
-<li>有序性 保证指令不会受并行优化的影响</li>
-</ol>
-<h3 id="volatile关键字"><a href="#volatile关键字" class="headerlink" title="volatile关键字"></a>volatile关键字</h3><p>该关键字解决了可见性和有序性，volatile通过内存屏障来实现的</p>
-<p>写屏障<br>会在对象写操作之后加写屏障，会对写屏障的之前的数据都同步到主存，并且保证写屏障的执行顺序在写屏障之前</p>
-<p>读屏障<br>会在对象读操作之前加读屏障，会在读屏障之后的语句都从主存读，并保证读屏障之后的代码执行在读屏障之后</p>
-<p>当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值。而普通的共享变量不能保证可见性，因为普通共享变量被修改之后，什么时候被写入主存是不确定的，当其他线程去读取时，此时内存中可能还是原来的旧值，因此无法保证可见性。</p>
-<p>注意： <strong>volatile不能解决原子性，即不能通过该关键字实现线程安全。</strong></p>
-<p>volatile应用场景：<strong>一个线程读取变量，另外的线程操作变量，加了该关键字后保证写变量后，读变量的线程可以及时感知。</strong></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://alexwooly.gitee.io/2021/05/03/JMM%E5%8F%8Avolatile%E5%85%B3%E9%94%AE%E5%AD%97/" data-id="cko8pfiel0000ru9iayuh8w5o" data-title="JMM及volatile关键字 （篇七）" class="article-share-link">分享</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1070,7 +1178,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Docker/" style="font-size: 13.33px;">Docker</a> <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
+      <a href="/tags/Docker/" style="font-size: 16.67px;">Docker</a> <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 13.33px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
     </div>
   </div>
 
@@ -1092,6 +1200,10 @@
       <ul>
         
           <li>
+            <a href="/2021/05/19/Docker%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4%E5%A4%A7%E5%85%A8%E5%8F%8A%E5%85%B6%E8%AF%A6%E8%A7%A3%E6%95%B4%E7%90%86/">Docker常用指令大全及其详解整理</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/15/Docker%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4/">Docker常用指令</a>
           </li>
         
@@ -1105,10 +1217,6 @@
         
           <li>
             <a href="/2021/05/11/%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%90%86%E8%AE%BA/">分布式架构理论</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/07/Java%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E6%93%8D%E4%BD%9C/">Java基本数据结构及其操作</a>
           </li>
         
       </ul>
@@ -1128,6 +1236,11 @@
       Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
+   {% if theme.footer.beian.enable %}{#
+#}  {{ next_url('http://www.miitbeian.gov.cn', theme.footer.beian.icp ) }}
+{% endif %}
+{% if theme.footer.gongan.enable %}{#
+#} {{' | '}}<span style="padding-left:25px;background:url(https://s1.ax1x.com/2018/09/29/ilmwIH.png) no-repeat left center" rel="nofollow">
 </footer>
 
     </div>

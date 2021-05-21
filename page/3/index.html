@@ -77,6 +77,177 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Java多线程 线程创建（篇一）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E5%88%9B%E5%BB%BA%EF%BC%88%E7%AF%87%E4%B8%80%EF%BC%89/" class="article-date">
+  <time class="dt-published" datetime="2021-04-25T09:55:55.000Z" itemprop="datePublished">2021-04-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E5%88%9B%E5%BB%BA%EF%BC%88%E7%AF%87%E4%B8%80%EF%BC%89/">Java多线程 线程创建（篇一）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="JAVA多线程-第一篇-线程创建"><a href="#JAVA多线程-第一篇-线程创建" class="headerlink" title="JAVA多线程 第一篇 线程创建"></a>JAVA多线程 第一篇 线程创建</h2><h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>给自己挖个大坑，Java多线程开搞，文章参考CSDN各位大佬的文章，再结合我自己的一些见解和语言，对于一些小的知识点进行补充和整合。</p>
+<h4 id="线程与进程"><a href="#线程与进程" class="headerlink" title="线程与进程"></a>线程与进程</h4><h6 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h6><p>启动了一个程序，即开启了一个进程，每个进程会在计算机内存中分配一个独立空间<br>程序由指令和数据组成，指令要运行，数据要加载，指令被cpu加载运行，数据被加载到内存，指令运行时可由cpu调度硬盘、网络等设备</p>
+<h6 id="线程"><a href="#线程" class="headerlink" title="线程"></a>线程</h6><p>一个进程内可分为多个线程（至少一个）<br>一个线程就是一个进程的执行单元</p>
+<h4 id="多线程的好处"><a href="#多线程的好处" class="headerlink" title="多线程的好处"></a>多线程的好处</h4><p>1.程序运行加快</p>
+<p>2.充分利用电脑多核CPU能力</p>
+<h3 id="多线程的定义"><a href="#多线程的定义" class="headerlink" title="多线程的定义"></a>多线程的定义</h3><h5 id="三种方法（不考虑匿名内部类）"><a href="#三种方法（不考虑匿名内部类）" class="headerlink" title="三种方法（不考虑匿名内部类）"></a>三种方法（不考虑匿名内部类）</h5><p><strong>1.继承Thread类</strong></p>
+<p><strong>2.实现Runnable接口</strong></p>
+<p><strong>3.实现Callable接口</strong></p>
+<h3 id="多线程的创建"><a href="#多线程的创建" class="headerlink" title="多线程的创建"></a>多线程的创建</h3><ol>
+<li><p>通过Thread类直接创建线程</p>
+</li>
+<li><p>利用线程池内部创建线程</p>
+</li>
+</ol>
+<h4 id="一-继承Thread类"><a href="#一-继承Thread类" class="headerlink" title="一.继承Thread类"></a>一.继承Thread类</h4><p>优势：编写简单，无需使用Thread.currentThread()访问当前线程，直接使用this即可获得。</p>
+<p>劣势：线程类继承了父类Thread类，<strong>无法再继承别的父类</strong></p>
+<p>代码展示</p>
+<p>MyThread类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.demo;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//可以给线程重新命名</span></span><br><span class="line">    MyThread(String name)&#123;</span><br><span class="line">        <span class="keyword">super</span>(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;=<span class="number">3</span>;i++)&#123;</span><br><span class="line">            System.out.println(<span class="keyword">this</span>.getName()+<span class="string">&quot;---&quot;</span>+i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>Main方法中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span> ;i&lt;<span class="number">5</span>;i++)&#123;</span><br><span class="line">            MyThread thread = <span class="keyword">new</span> MyThread(String.valueOf(i+<span class="number">1</span>));</span><br><span class="line">            System.out.println(<span class="string">&quot;[线程&quot;</span>+(i+<span class="number">1</span>)+<span class="string">&quot;]正在启动！&quot;</span>);</span><br><span class="line"><span class="comment">//            thread.run();</span></span><br><span class="line">            thread.start();</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中值得一提的是run()方法，run（）方法当作普通方法的方式调用，程序还是要顺序执行，还是要等待run方法体执行完毕后才可继续执行下面的代码。而start()真正实现了多线程。</p>
+<p>run（）结果展示</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[线程1]正在启动！</span><br><span class="line">1---1</span><br><span class="line">1---2</span><br><span class="line">1---3</span><br><span class="line">[线程2]正在启动！</span><br><span class="line">2---1</span><br><span class="line">2---2</span><br><span class="line">2---3</span><br><span class="line">[线程3]正在启动！</span><br><span class="line">3---1</span><br><span class="line">3---2</span><br><span class="line">3---3</span><br><span class="line">[线程4]正在启动！</span><br><span class="line">4---1</span><br><span class="line">4---2</span><br><span class="line">4---3</span><br><span class="line">[线程5]正在启动！</span><br><span class="line">5---1</span><br><span class="line">5---2</span><br><span class="line">5---3</span><br></pre></td></tr></table></figure>
+
+<p>而start（）结果展示</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[线程1]正在启动！</span><br><span class="line">[线程2]正在启动！</span><br><span class="line">[线程3]正在启动！</span><br><span class="line">[线程4]正在启动！</span><br><span class="line">[线程5]正在启动！</span><br><span class="line">3---1</span><br><span class="line">5---1</span><br><span class="line">1---1</span><br><span class="line">1---2</span><br><span class="line">4---1</span><br><span class="line">4---2</span><br><span class="line">2---1</span><br><span class="line">2---2</span><br><span class="line">4---3</span><br><span class="line">1---3</span><br><span class="line">5---2</span><br><span class="line">3---2</span><br><span class="line">5---3</span><br><span class="line">2---3</span><br><span class="line">3---3</span><br></pre></td></tr></table></figure>
+
+
+
+<p>多次运行可以发现，每次的结果都基本不会相同，所以多线程的运行顺序是<strong>无序</strong>的，<strong>代码的运行结果与代码执行顺序或调用顺序是无关的</strong>，但可以通过<strong>join（）</strong>，<strong>线程池</strong>等方法来控制，后面再讲。</p>
+<h4 id="二-实现Runnable接口"><a href="#二-实现Runnable接口" class="headerlink" title="二.实现Runnable接口"></a>二.实现Runnable接口</h4><p>优势：1.相比第一种继承Thread类的方式，使用了面向接口，将任务与线程进行分离，有利于解耦</p>
+<p>​            2.可以继承其他类</p>
+<p>劣势：访问当前线程，则必须使用Thread.currentThread()方法</p>
+<p>Runbale相比Callable有以下的局限性</p>
+<ol>
+<li>任务没有返回值</li>
+<li>任务无法抛异常</li>
+</ol>
+<p>Mythread类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;=<span class="number">3</span>;i++)&#123;</span><br><span class="line">            System.out.println(Thread.currentThread().getName()+<span class="string">&quot;---&quot;</span>+i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Main方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span> ;i&lt;<span class="number">5</span>;i++)&#123;</span><br><span class="line">    MyThread myThread = <span class="keyword">new</span> MyThread();</span><br><span class="line">    Thread thread = <span class="keyword">new</span> Thread(myThread);  <span class="comment">//与继承Thread类不一样的地方</span></span><br><span class="line">    thread.setName(String.valueOf(i+<span class="number">1</span>));  <span class="comment">//给线程命名，也可以不自定义</span></span><br><span class="line">    System.out.println(<span class="string">&quot;[线程&quot;</span>+(i+<span class="number">1</span>)+<span class="string">&quot;]正在启动！&quot;</span>);</span><br><span class="line">    <span class="comment">//thread.run();</span></span><br><span class="line">    thread.start();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>start（）结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[线程1]正在启动！</span><br><span class="line">[线程2]正在启动！</span><br><span class="line">[线程3]正在启动！</span><br><span class="line">[线程4]正在启动！</span><br><span class="line">[线程5]正在启动！</span><br><span class="line">5---1</span><br><span class="line">5---2</span><br><span class="line">5---3</span><br><span class="line">1---1</span><br><span class="line">2---1</span><br><span class="line">2---2</span><br><span class="line">3---1</span><br><span class="line">4---1</span><br><span class="line">3---2</span><br><span class="line">2---3</span><br><span class="line">1---2</span><br><span class="line">3---3</span><br><span class="line">4---2</span><br><span class="line">1---3</span><br><span class="line">4---3</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="三-实现Callable接口（利用FutureTask执行任务，实现implements-Callable-lt-返回值类型-gt-）"><a href="#三-实现Callable接口（利用FutureTask执行任务，实现implements-Callable-lt-返回值类型-gt-）" class="headerlink" title="三.实现Callable接口（利用FutureTask执行任务，实现implements Callable&lt;返回值类型&gt;）"></a>三.实现Callable接口（利用FutureTask执行任务，实现implements Callable&lt;返回值类型&gt;）</h4><p>劣势：访问当前线程，则必须使用Thread.currentThread()方法</p>
+<h6 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h6><p>（1）创建Callable接口的实现类，并实现call()方法，该call()方法将作为线程执行体，并且有返回值。</p>
+<p>（2）创建Callable实现类的实例，使用FutureTask类来包装Callable对象，该FutureTask对象封装了该Callable对象的call()方法的返回值。</p>
+<p>（3）使用FutureTask对象作为Thread对象的target创建并启动新线程。</p>
+<p>（4）调用FutureTask对象的get()方法来获得子线程执行结束后的返回值</p>
+<p>MyThread类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.concurrent.Callable;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">implements</span> <span class="title">Callable</span>&lt;<span class="title">String</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//Callable接口内部实现call（）方法，相当于前面的run（）方法</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;=<span class="number">3</span>;i++)&#123;</span><br><span class="line">            System.out.println(Thread.currentThread().getName()+<span class="string">&quot;---&quot;</span>+i);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> Thread.currentThread().getName() + <span class="string">&quot;运行成功&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>Main方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span> ;i&lt;<span class="number">5</span>;i++)&#123;</span><br><span class="line">    MyThread myThread = <span class="keyword">new</span> MyThread();</span><br><span class="line">    FutureTask&lt;String&gt; task = <span class="keyword">new</span> FutureTask&lt;&gt;(myThread);   <span class="comment">//与继承Thread类不一样的地方</span></span><br><span class="line">    Thread thread = <span class="keyword">new</span> Thread(task);  <span class="comment">//以task对象作为target</span></span><br><span class="line">    System.out.println(<span class="string">&quot;开始&quot;</span>);</span><br><span class="line">    thread.start();</span><br><span class="line">    System.out.println(<span class="string">&quot;执行结果为&quot;</span>+task.get());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>结果</p>
+<p>由于FutureTask要等执行完才能get到执行结果，因此由于System.out.println(“执行结果为”+task.get());的存在，</p>
+<p>结果如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">开始</span><br><span class="line">Thread-1---1</span><br><span class="line">Thread-1---2</span><br><span class="line">Thread-1---3</span><br><span class="line">执行结果为Thread-1运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-2---1</span><br><span class="line">Thread-2---2</span><br><span class="line">Thread-2---3</span><br><span class="line">执行结果为Thread-2运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-3---1</span><br><span class="line">Thread-3---2</span><br><span class="line">Thread-3---3</span><br><span class="line">执行结果为Thread-3运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-4---1</span><br><span class="line">Thread-4---2</span><br><span class="line">Thread-4---3</span><br><span class="line">执行结果为Thread-4运行成功</span><br><span class="line">开始</span><br><span class="line">Thread-5---1</span><br><span class="line">Thread-5---2</span><br><span class="line">Thread-5---3</span><br><span class="line">执行结果为Thread-5运行成功</span><br></pre></td></tr></table></figure>
+
+
+
+<p>去掉System.out.println(“执行结果为”+task.get())的结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">开始</span><br><span class="line">Thread-3---1</span><br><span class="line">Thread-1---1</span><br><span class="line">Thread-5---1</span><br><span class="line">Thread-2---1</span><br><span class="line">Thread-4---1</span><br><span class="line">Thread-2---2</span><br><span class="line">Thread-2---3</span><br><span class="line">Thread-5---2</span><br><span class="line">Thread-5---3</span><br><span class="line">Thread-1---2</span><br><span class="line">Thread-3---2</span><br><span class="line">Thread-1---3</span><br><span class="line">Thread-4---2</span><br><span class="line">Thread-3---3</span><br><span class="line">Thread-4---3</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="内部匿名类实现"><a href="#内部匿名类实现" class="headerlink" title="内部匿名类实现"></a>内部匿名类实现</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 启动继承Thread匿名内部类的任务</span></span><br><span class="line">Thread thread = <span class="keyword">new</span> Thread()&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    log.info(<span class="string">&quot;我是Thread匿名内部类实现&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  用Runnable实现比较常用</span></span><br><span class="line"><span class="comment">//  启动实现Runnable匿名实现类的任务</span></span><br><span class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;Runnable匿名内部类实现&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).start();</span><br><span class="line"></span><br><span class="line"><span class="comment">//  启动实现Runnable的lambda简化后的任务</span></span><br><span class="line"><span class="keyword">new</span> Thread(() -&gt; log.info(<span class="string">&quot;Runnable的lambda简化后的实现&quot;</span>)).start();</span><br></pre></td></tr></table></figure>
+
+<p><strong>其中对于log日志，如果不想每次都写private final Logger logger = LoggerFactory.getLogger(当前类名.class); 可以用Lombok插件的注解@Slf4j，对这两种创建模式的优劣，这里不做论述。</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/04/25/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20%E7%BA%BF%E7%A8%8B%E5%88%9B%E5%BB%BA%EF%BC%88%E7%AF%87%E4%B8%80%EF%BC%89/" data-id="cko6zj6yu0000rj9i828jc620" data-title="Java多线程 线程创建（篇一）" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag">Java多线程</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-pytoqr" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/25/pytoqr/" class="article-date">
+  <time class="dt-published" datetime="2021-04-25T04:34:43.000Z" itemprop="datePublished">2021-04-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/25/pytoqr/">利用python定制个性化二维码</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="利用python定制个性化二维码"><a href="#利用python定制个性化二维码" class="headerlink" title="利用python定制个性化二维码"></a>利用python定制个性化二维码</h2><p>其中获取自己QQ或者微信加好友的链接地址，可以先保存自己QQ或微信自带的二维码，然后去解码。</p>
+<p>我用的是 <a target="_blank" rel="noopener" href="https://cli.im/deqr%EF%BC%88%E8%8D%89%E6%96%99%E4%BA%8C%E7%BB%B4%E7%A0%81%E8%A7%A3%E7%A0%81%EF%BC%89">https://cli.im/deqr（草料二维码解码）</a></p>
+<p>因为代码上都加了注释，就直接附上代码了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> MyQR <span class="keyword">import</span> myqr</span><br><span class="line">myqr.run(</span><br><span class="line">    words=<span class="string">&#x27;https://u.wechat.com/MJmwiSDxbQLsETk7dzgcPH0&#x27;</span>,</span><br><span class="line">    <span class="comment"># 扫描二维码后，显示的内容，或是跳转的链接</span></span><br><span class="line">    version=<span class="number">5</span>,  <span class="comment"># 设置容错率</span></span><br><span class="line">    level=<span class="string">&#x27;H&#x27;</span>,  <span class="comment"># 控制纠错水平，范围是L、M、Q、H，从左到右依次升高</span></span><br><span class="line">    picture=<span class="string">&#x27;pi.gif&#x27;</span>,  <span class="comment"># 图片所在目录，可以是动图</span></span><br><span class="line">    colorized=<span class="literal">True</span>,  <span class="comment"># 黑白(False)还是彩色(True)</span></span><br><span class="line">    contrast=<span class="number">1.0</span>,  <span class="comment"># 用以调节图片的对比度，1.0 表示原始图片。默认为1.0。</span></span><br><span class="line">    brightness=<span class="number">1.0</span>,  <span class="comment"># 用来调节图片的亮度，用法同上。</span></span><br><span class="line">    save_name=<span class="string">&#x27;my_weixin.gif&#x27;</span>,  <span class="comment"># 控制输出文件名，格式可以是 .jpg， .png ，.bmp ，.gif</span></span><br><span class="line">    )</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="我选用的背景图"><a href="#我选用的背景图" class="headerlink" title="我选用的背景图"></a>我选用的背景图</h4><img src="/2021/04/25/pytoqr/pi.gif" width="50%" height="50%">
+
+<h5 id="最终效果（我的微信）"><a href="#最终效果（我的微信）" class="headerlink" title="最终效果（我的微信）"></a>最终效果（我的微信）</h5><img src="/2021/04/25/pytoqr/my_weixin.gif" width="50%" height="50%">
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://alexwooly.gitee.io/2021/04/25/pytoqr/" data-id="cko6zj6z50008rj9igiwo5u2i" data-title="利用python定制个性化二维码" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-pyexceljs" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/24/pyexceljs/" class="article-date">
@@ -389,7 +560,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Docker/" style="font-size: 13.33px;">Docker</a> <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 10px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
+      <a href="/tags/Docker/" style="font-size: 16.67px;">Docker</a> <a href="/tags/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/" style="font-size: 20px;">Java多线程</a> <a href="/tags/Java%E5%B7%A5%E5%85%B7%E7%B1%BB/" style="font-size: 13.33px;">Java工具类</a> <a href="/tags/Java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">Java数据结构</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/Redis/" style="font-size: 16.67px;">Redis</a> <a href="/tags/jwt/" style="font-size: 13.33px;">jwt</a> <a href="/tags/python/" style="font-size: 13.33px;">python</a> <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" style="font-size: 10px;">微服务</a>
     </div>
   </div>
 
@@ -411,6 +582,10 @@
       <ul>
         
           <li>
+            <a href="/2021/05/19/Docker%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4%E5%A4%A7%E5%85%A8%E5%8F%8A%E5%85%B6%E8%AF%A6%E8%A7%A3%E6%95%B4%E7%90%86/">Docker常用指令大全及其详解整理</a>
+          </li>
+        
+          <li>
             <a href="/2021/05/15/Docker%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4/">Docker常用指令</a>
           </li>
         
@@ -424,10 +599,6 @@
         
           <li>
             <a href="/2021/05/11/%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%90%86%E8%AE%BA/">分布式架构理论</a>
-          </li>
-        
-          <li>
-            <a href="/2021/05/07/Java%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E6%93%8D%E4%BD%9C/">Java基本数据结构及其操作</a>
           </li>
         
       </ul>
@@ -447,6 +618,11 @@
       Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
+   {% if theme.footer.beian.enable %}{#
+#}  {{ next_url('http://www.miitbeian.gov.cn', theme.footer.beian.icp ) }}
+{% endif %}
+{% if theme.footer.gongan.enable %}{#
+#} {{' | '}}<span style="padding-left:25px;background:url(https://s1.ax1x.com/2018/09/29/ilmwIH.png) no-repeat left center" rel="nofollow">
 </footer>
 
     </div>
